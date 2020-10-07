@@ -3,7 +3,7 @@ name: Standard Workflow CI
 on: 
   push:
     branches:
-      - '!generalized'
+      - '!main'
 
 jobs:
   check_and_build:
