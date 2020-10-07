@@ -1,0 +1,6 @@
+images:
+  base:
+    1.0.0:
+      children: [null]
+      parents: ["ubuntu:18.04"]
+latest: { base: 1.0.0 }
