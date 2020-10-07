@@ -1,0 +1,14 @@
+commands:
+  - cmd: 'parallel --version | head -n1'
+    expect_text: |
+      GNU parallel 20161222
+  - cmd: 'pandoc --version'
+    expect_text: |
+      pandoc 1.19.2.4
+      Compiled with pandoc-types 1.17.0.5, texmath 0.9.4.4, skylighting 0.3.3.1
+      Default user data directory: /root/.pandoc
+      Copyright (C) 2006-2016 John MacFarlane
+      Web:  http://pandoc.org
+      This is free software; see the source for copying conditions.
+      There is no warranty, not even for merchantability or fitness
+      for a particular purpose.
