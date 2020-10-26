@@ -85,7 +85,7 @@ jobs:
           set -e
           source scripts/functions.sh
           git show ${DEPLOY_BRANCH}:relations.yaml > relations.yaml
-          python3 scripts/relational.py ${docker_file}
+          python3 scripts/update_relations.py ${docker_file}
           image_name=$(echo ${docker_file} | rev | cut -f3 -d '/' | rev)
           image_version=$(echo ${docker_file} | rev | cut -f2 -d '/' | rev)
           docker_image=$(echo -e "${image_name}:${image_version}")
