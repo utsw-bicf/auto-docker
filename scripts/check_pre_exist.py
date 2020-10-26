@@ -36,8 +36,8 @@ def check_version_info(master_version, image_version):
                 return False
             elif image_version.split(sep=".")[1] == master_version.split(sep=".")[1]:
                 if image_version.split(sep=".")[2] <= master_version.split(sep=".")[2]:
-                    print("Error: Proposed patch version number {} is less than or equal the current master version: {}\n\ Please \
-                               incriment the version for this image correctly.".format(image_version, master_version), file=sys.stderr)
+                    print("Error: Proposed patch version number {} is less than or equal the current master version: {}\nPlease incriment the version for this image correctly.".format(
+                        image_version, master_version), file=sys.stderr)
                     return False
                 else:
                     print(
