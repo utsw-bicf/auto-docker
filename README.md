@@ -7,25 +7,17 @@ Lightweight version of our automated Docker image builder
 1. Fork this repository from the master branch, and rename it to suite your needs
 2. Setup the following secrets:
 
-### DEPLOY_BRANCH
+**DEPLOY_BRANCH**: This should be set to something other than ***master*** or ***main***.  We use ***develop***
 
-This should be set to something other than ***master*** or ***main***.  We use ***develop***
-
-### DOCKERHUB_ORG
-
-The default Docker Hub organization name.  If you don't want to use the default Dockerhub, this is where you can change it to either Azure or AWS container registries, otherwise just use your dafult Dockerhub ID.  This is the first part of your *docker push* command, before the first slash:
+**DOCKERHUB_ORG** The default Docker Hub organization name.  If you don't want to use the default Dockerhub, this is where you can change it to either Azure or AWS container registries, otherwise just use your dafult Dockerhub ID.  This is the first part of your *docker push* command, before the first slash:
 
 > docker push ${DOCKERHUB_ORG}/${image_name}:${image_version}
 
 We recommend having a user account that is now owned by any idndividual for pushing, so that you are not compromising personal credentials.
 
-### DOCKERHUB_PW
+**DOCKERHUB_PW**: Pretty self-explanitory, password to log in to your Dockerhub organization.
 
-Pretty self-explanitory, password to log in to your Dockerhub organization.
-
-### DOCKERHUB_UN
-
-Again, the username associated with the above organization and password.
+**DOCKERHUB_UN**: Again, the username associated with the above organization and password.
 
 3. Change the name of the base image to suite your needs.  So, since we are the bicf, we call ours *bicfbase*.  You will need to do this in the main directory, as well as in the *relations.yaml* file.
 
