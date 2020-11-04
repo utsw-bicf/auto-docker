@@ -7,19 +7,19 @@ Lightweight version of our automated Docker image builder
 1. Fork this repository from the master branch, and rename it to suite your needs
 2. Setup the following secrets:
 
-**DEPLOY_BRANCH**: This should be set to something other than ***master*** or ***main***.  We use ***develop***
++ **DEPLOY_BRANCH**: This should be set to something other than ***master*** or ***main***.  We use ***develop***
 
-**DOCKERHUB_ORG** The default Docker Hub organization name.  If you don't want to use the default Dockerhub, this is where you can change it to either Azure or AWS container registries, otherwise just use your dafult Dockerhub ID.  This is the first part of your *docker push* command, before the first slash:
++ **DOCKERHUB_ORG** The default Docker Hub organization name.  If you don't want to use the default Dockerhub, this is where you can change it to either Azure or AWS container registries, otherwise just use your dafult Dockerhub ID.  This is the first part of your *docker push* command, before the first slash:
 
-> docker push ${DOCKERHUB_ORG}/${image_name}:${image_version}
++ > docker push ${DOCKERHUB_ORG}/${image_name}:${image_version}
 
 We recommend having a user account that is now owned by any idndividual for pushing, so that you are not compromising personal credentials.
 
-**DOCKERHUB_PW**: Pretty self-explanitory, password to log in to your Dockerhub organization.
++ **DOCKERHUB_PW**: Pretty self-explanitory, password to log in to your Dockerhub organization.
 
-**DOCKERHUB_UN**: Again, the username associated with the above organization and password.
++ **DOCKERHUB_UN**: Again, the username associated with the above organization and password.
 
-3. Change the name of the base image to suite your needs.  So, since we are the bicf, we call ours *bicfbase*.  You will need to do this in the main directory, as well as in the *relations.yaml* file.
+3. Change the name of the base image to suite your needs.  So, since we are the bicf, we call ours *bicfbase*.  You will need to do this in the main directory, as well as in thFe *relations.yaml* file.
 
 That should be it, you're all set.
   
@@ -34,8 +34,8 @@ Every new image is setup with the following:
 
 2. Inside the version sub-directory should be at least two files:
 
-* **Dockerfile** which is the standard Docker build file
-* **unittest.yml** which is a simple command/result unit test file for what you expect to be present in a functional version of your image.
++ **Dockerfile** which is the standard Docker build file
++ **unittest.yml** which is a simple command/result unit test file for what you expect to be present in a functional version of your image.
 
 Any additional files required for installation may be placed here as well, such as any scripting files required by the image.  Be aware, these folders are available to anyone that you grant permissions to access this repository, so placing user names and passwords is not advised.
 
@@ -61,10 +61,10 @@ The thought process for this tier is that these images are still in testing by t
 
 1. When a user wants to create a new image, first they should create an issue requesting this new image.  What is in this issue is up to the manager of the fork, however, it is recommended that they list out the following:
 
-* The programs and associated version numbers required for this image
-* The URLs for any installation instructions and downloads
-* Any time crunch considerations
-* What programs would be
++ The programs and associated version numbers required for this image
++ The URLs for any installation instructions and downloads
++ Any time crunch considerations
++ What programs would be
 
 2. From there, it is up to those who are maintaining the repository to figure out which images should be used as a parent image, and create a new branch, tied to the issue.
 
