@@ -10,6 +10,7 @@ import os
 import sys
 import re
 import yaml
+import numpy as np
 
 
 def check_version_info(master_version, image_version):
@@ -18,7 +19,10 @@ def check_version_info(master_version, image_version):
     :param master_version: version of the Dockerfile specified in Master branch
     :param image_version: version of the proposed new Dockerfile
     """
-    if re.match("[0-9]+.[0-9]+.[0-9]+"):
+    pattern = re.compile("[0-9]+.[0-9]+.[0-9]+")
+    print(image_version)
+    print(master_version)
+    if pattern.match(image_version):
         if image_version.split(sep=".")[0] < master_version.split(sep=".")[0]:
             print("Error: Proposed major version number {} is less than the current major version number on master {}.\nPlease\
                       incriment the version for this image correctly.".format(image_version.split(sep=".")[0],
@@ -68,8 +72,10 @@ def check_exists(master_yaml, image_name, image_version):
                      Cannot proceed, please change the image version to avoide overwritting a locked image.", file=sys.stderr)
             return False
         else:
-            print("New version of this image found, verifying that this is an updated version number", file=sys.stderr)
-            return check_version_info(master_yaml['images'][image_name][-1], image_version)
+            print("New version of {} found, verifying that this is an updated version number".format(image_name), file=sys.stderr)
+            previous_version = np.array(list(master_yaml['images'][image_name]))[-1]
+            print(previous_version)
+            return check_version_info(previous_version, image_version)
     else:
         print("New image found, proceeding with build/push, and updating relations.yaml.", file=sys.stderr)
         return True

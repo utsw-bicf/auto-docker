@@ -1,9 +1,6 @@
 name: Standard Workflow CI
 
-on: 
-  push:
-    branches:
-      - '!main'
+on: [push]
 
 jobs:
   check_and_build:
@@ -16,6 +13,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7.8'
       - name: Check Build
         id: checkBuild
         env:
@@ -31,6 +31,7 @@ jobs:
           #Check to see if more than one Dockerfile has been updated, and if so, error out.
           compare_range=$(get_compare_range)
           paths=$(changed_paths_in_range "${compare_range}")
+          echo "::set-output name=paths::$(echo ${paths})"
           print_changed "${compare_range}" "${paths}"
           docker_counter=$(print_changed "${compare_range}" "${paths}" | grep -i "/dockerfile$" | wc -l)
           if [ "${docker_counter}" -gt "1" ]; then
@@ -38,11 +39,11 @@ jobs:
             exit 1
           elif [ "${docker_counter}" -eq "1" ]; then
             echo "New or updated Dockerfile found, building image and running CI"
-            echo "::set-output name=paths::$(echo ${paths})"
             #Check to see if the proposed version already exists in master
             git show origin/master:relations.yaml > master_relation.yml
             docker_file=$(print_changed "${compare_range}" "${paths}" | grep -i "/dockerfile$")
             echo "::set-output name=docker_file::$(echo ${docker_file})"
+            python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
             python3 scripts/check_pre_exist.py master_relation.yml ${docker_file}
             rm master_relation.yml
             echo "::set-output name=build::${{true}}"
@@ -79,13 +80,16 @@ jobs:
         env:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
+          DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
+          DOCKER_USERNAME: ${{secrets.DOCKERHUB_UN}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           paths: ${{ steps.checkBuild.outputs.paths }}
           docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
           set -e
           source scripts/functions.sh
           git show ${DEPLOY_BRANCH}:relations.yaml > relations.yaml
-          python3 scripts/relational.py ${docker_file}
+          python3 scripts/update_relations.py ${docker_file}
           image_name=$(echo ${docker_file} | rev | cut -f3 -d '/' | rev)
           image_version=$(echo ${docker_file} | rev | cut -f2 -d '/' | rev)
           docker_image=$(echo -e "${image_name}:${image_version}")
