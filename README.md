@@ -11,7 +11,7 @@ Lightweight version of our automated Docker image builder
 
 + **DOCKERHUB_ORG** The default Docker Hub organization name.  If you don't want to use the default Dockerhub, this is where you can change it to either Azure or AWS container registries, otherwise just use your dafult Dockerhub ID.  This is the first part of your *docker push* command, before the first slash:
 
-+ > docker push ${DOCKERHUB_ORG}/${image_name}:${image_version}
+> docker push ${DOCKERHUB_ORG}/${image_name}:${image_version}
 
 We recommend having a user account that is now owned by any idndividual for pushing, so that you are not compromising personal credentials.
 
