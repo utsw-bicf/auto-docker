@@ -89,7 +89,7 @@ The thought process for this branch is that these images are still in testing by
 
 2. From there, it is up to those who are maintaining the repository to figure out which images should be used as a parent image, and create a new branch, tied to the issue.
 
-3. On this branch, write the new Docker recipe along with any tests that are required to ensure functionality
+3. On this branch, write the new Docker recipe along with any tests that are required to ensure functionality.  Note that with the checks, it is recommended that you only test the first line or two, or however much is required to get a version number, __***and***__ URLs tend to not work very well, and can cause testing failures.
 
 4. Once the branch is pushed, the image will be built, and the tests specified will be run on it.
 
