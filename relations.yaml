@@ -4,3 +4,4 @@ images:
       children: [null]
       parents: ["ubuntu:18.04"]
 latest: { base: 1.0.0 }
+terminated: {}

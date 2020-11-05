@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Receives a relations file and a docker image:version combination, and verifies that this image does not already exist in the master branch.
-If it exists in master, as these images are meant to be locked down and final, it errors out and tells the user to try another image 
+If it exists in master, as these images are meant to be locked down and final, it errors out and tells the user to try another image
 version.  Otherwise, it allows procedure as normal.
 After this, it should build the image, push to DockerHub, and continue as normal.
 """
@@ -72,10 +72,8 @@ def check_exists(master_yaml, image_name, image_version):
                      Cannot proceed, please change the image version to avoide overwritting a locked image.", file=sys.stderr)
             return False
         else:
-            print("New version of {} found, verifying that this is an updated version number".format(
-                image_name), file=sys.stderr)
-            previous_version = np.array(
-                list(master_yaml['images'][image_name]))[-1]
+            print("New version of {} found, verifying that this is an updated version number".format(image_name), file=sys.stderr)
+            previous_version = np.array(list(master_yaml['images'][image_name]))[-1]
             print(previous_version)
             return check_version_info(previous_version, image_version)
     else:
