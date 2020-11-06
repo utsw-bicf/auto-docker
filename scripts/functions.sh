@@ -40,14 +40,14 @@ function fetch_master() {
   local build_head=$(git rev-parse HEAD)
 
   current_branch=$(current_branch_name)
-  if [[ "${current_branch}" != "origin/main" ]]; then
-    # If the current branch is not main
-    # fetch the main branch
+  if [[ "${current_branch}" != "origin/master" ]]; then
+    # If the current branch is not master
+    # fetch the master branch
     git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
-    git fetch origin main
+    git fetch origin master
 
     # create the tracking branch
-    git checkout -qf main
+    git checkout -qf master
 
     # finally, go beack to where we were at the beginning
     git checkout ${build_head}

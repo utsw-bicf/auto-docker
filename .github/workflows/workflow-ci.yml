@@ -23,6 +23,7 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
+          set -e
           source scripts/functions.sh
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -38,8 +39,8 @@ jobs:
             exit 1
           elif [ "${docker_counter}" -eq "1" ]; then
             echo "New or updated Dockerfile found, building image and running CI"
-            #Check to see if the proposed version already exists in main
-            git show origin/main:relations.yaml > master_relation.yml
+            #Check to see if the proposed version already exists in master
+            git show origin/master:relations.yaml > master_relation.yml
             docker_file=$(print_changed "${compare_range}" "${paths}" | grep -i "/dockerfile$")
             echo "::set-output name=docker_file::$(echo ${docker_file})"
             python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
@@ -92,7 +93,7 @@ jobs:
           image_name=$(echo ${docker_file} | rev | cut -f3 -d '/' | rev)
           image_version=$(echo ${docker_file} | rev | cut -f2 -d '/' | rev)
           docker_image=$(echo -e "${image_name}:${image_version}")
-          echo "DOCKER_IMAGE=$(echo ${DOCKERHUB_ORG}/${docker_image})" >> ${GITHUB_ENV}
+          echo "::set-env name=DOCKER_IMAGE::$(echo ${DOCKERHUB_ORG}/${docker_image})"
 
       - name: Commit New Relations
         id: commitNewRelations
