@@ -14,7 +14,7 @@ def load_yaml(master_yaml):
     Loads a yaml file and returns a python yaml object
     :param yaml_file: the yaml file to open and read
     """
-    with open(z_yaml) as yaml_file:
+    with open(master_yaml) as yaml_file:
         yaml_data = yaml.safe_load(yaml_file)
     yaml_file.close()
     return yaml_data
