@@ -40,7 +40,7 @@ jobs:
           elif [ "${docker_counter}" -eq "1" ]; then
             echo "New or updated Dockerfile found, building image and running CI"
             #Check to see if the proposed version already exists in master
-            git show origin/master:relations.yaml > master_relation.yml
+            git show origin/main:relations.yaml > master_relation.yml
             docker_file=$(print_changed "${compare_range}" "${paths}" | grep -i "/dockerfile$")
             echo "::set-output name=docker_file::$(echo ${docker_file})"
             python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
