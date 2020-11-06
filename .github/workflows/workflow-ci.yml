@@ -93,7 +93,7 @@ jobs:
           image_name=$(echo ${docker_file} | rev | cut -f3 -d '/' | rev)
           image_version=$(echo ${docker_file} | rev | cut -f2 -d '/' | rev)
           docker_image=$(echo -e "${image_name}:${image_version}")
-          echo "::set-env name=DOCKER_IMAGE::$(echo ${DOCKERHUB_ORG}/${docker_image})"
+          echo "DOCKER_IMAGE=$(echo ${DOCKERHUB_ORG}/${docker_image})" >> ${GITHUB_ENV}
 
       - name: Commit New Relations
         id: commitNewRelations
