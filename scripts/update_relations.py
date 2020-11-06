@@ -85,45 +85,48 @@ def update_children(child_list, update_type):
     for issue in list(g.get_repo(GITHUB_REPO).get_issues(state='open')):
         issue_array.append(issue.title)
     for child in child_list:
-        child_image = re.split(':', child)[0]
-        child_version = re.split(':', child)[1]
-        # Ensure that the image is not in the terminated list
-        if (is_terminated(child_image)):
-            print(
-                "This image has been flagged as not to be automatically updated, skipping.")
+        if child == None:
             continue
         else:
-            # Get the versioning information from the previous entry
-            child_major = int(child_version.split(sep=".")[0])
-            child_minor = int(child_version.split(sep=".")[1])
-            child_patch = int(child_version.split(sep=".")[2])
-            # Re-set the version number to match the change from the previous image to the new image
-            if(update_type == 'major'):
-                child_major += 1
-                child_minor = 0
-                child_patch = 0
-            elif(update_type == 'minor'):
-                child_minor += 1
-                child_patch = 0
-            else:
-                child_patch += 1
-            new_child_version = "{}.{}.{}".format(
-                child_major, child_minor, child_patch)
-            position = child_list.index(child)
-            new_child = "{}:{}".format(child_image, new_child_version)
-            child_list[position] = new_child
-            print("Found child image that will require updating: Update {} to {}".format(
-                child, new_child))
-            issue_title = "Update {} to {}".format(child, new_child)
-            if not issue_title in issue_array:
-                issue_body = "Parent image has been updated, please update the image {} to use the new parent image.  Recommended versioning: {}".format(
-                    child, new_child_version)
-                g.get_repo(GITHUB_REPO).create_issue(
-                    title=issue_title, body=issue_body)
-            else:
-                print("Issue for updating {} to {} already open.".format(
-                    child, new_child))
+            child_image = re.split(':', child)[0]
+            child_version = re.split(':', child)[1]
+            # Ensure that the image is not in the terminated list
+            if (is_terminated(child_image)):
+                print(
+                    "This image has been flagged as not to be automatically updated, skipping.")
                 continue
+            else:
+                # Get the versioning information from the previous entry
+                child_major = int(child_version.split(sep=".")[0])
+                child_minor = int(child_version.split(sep=".")[1])
+                child_patch = int(child_version.split(sep=".")[2])
+                # Re-set the version number to match the change from the previous image to the new image
+                if(update_type == 'major'):
+                    child_major += 1
+                    child_minor = 0
+                    child_patch = 0
+                elif(update_type == 'minor'):
+                    child_minor += 1
+                    child_patch = 0
+                else:
+                    child_patch += 1
+                new_child_version = "{}.{}.{}".format(
+                    child_major, child_minor, child_patch)
+                position = child_list.index(child)
+                new_child = "{}:{}".format(child_image, new_child_version)
+                child_list[position] = new_child
+                print("Found child image that will require updating: Update {} to {}".format(
+                    child, new_child))
+                issue_title = "Update {} to {}".format(child, new_child)
+                if not issue_title in issue_array:
+                    issue_body = "Parent image has been updated, please update the image {} to use the new parent image.  Recommended versioning: {}".format(
+                        child, new_child_version)
+                    g.get_repo(GITHUB_REPO).create_issue(
+                        title=issue_title, body=issue_body)
+                else:
+                    print("Issue for updating {} to {} already open.".format(
+                        child, new_child))
+                    continue
 
 
 def write_yaml():
