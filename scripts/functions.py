@@ -10,11 +10,11 @@ import yaml
 
 
 def get_deploy_branch():
-    deploy_branch = os.environ['DEPLOY_BRANCH']
+    return os.environ['DEPLOY_BRANCH']
 
 
 def get_current_branch_name():
-    print(os.system("echo ${GITHUB_REF##*/}"))
+    return os.system("echo ${GITHUB_REF##*/}")
 
 
 def fetch_develop():
@@ -60,24 +60,26 @@ def build_docker_cmd(command, owner, source, tag, tool, version):
     """
     Given a docker repo owner, image name, and version, produce an appropriate local docker command
     """
-    #Ensure the command is lower-case
+    # Ensure the command is lower-case
     command = command.lower()
     # Generate local build command
     if (command == "build"):
-        docker_cmd = "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}".format(tool, version, owner, tool, version, tool, version)
-    #Generate a command to return the image ID
+        docker_cmd = "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}".format(
+            tool, version, owner, tool, version, tool, version)
+    # Generate a command to return the image ID
     elif (command == "images"):
         docker_cmd = "docker images {}/{}:{} -q".format(owner, tool, tag)
-    #Generate pull command
+    # Generate pull command
     elif (command == "pull"):
         docker_cmd = "docker pull {}/{}:{}".format(owner, tool, version)
-    #Generate push command
+    # Generate push command
     elif (command == "push"):
         docker_cmd = "docker push {}/{}:{}".format(owner, tool, version)
-    #Generate tag command
+    # Generate tag command
     elif (command == "tag"):
-        docker_cmd = "docker tag {}/{}:{} {}/{}:{}".format(owner, tool, source, owner, tool, tag)
-    #If command not recognized, error out
+        docker_cmd = "docker tag {}/{}:{} {}/{}:{}".format(
+            owner, tool, source, owner, tool, tag)
+    # If command not recognized, error out
     else:
         print("Error, command \"{}\" not recognized, please verify it is one of the following: build, images, pull, push, tag\n.".format(command))
         exit(1)
