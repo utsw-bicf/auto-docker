@@ -39,7 +39,7 @@ def fetch_develop():
 
 def get_compare_range():
     """
-    If the current branch is the deploy branch, return a range representing the two parents of the HEAD's merge commit. If not, return a range 
+    If the current branch is the deploy branch, return a range representing the two parents of the HEAD's merge commit. If not, return a range
     comparing the current HEAD with the deploy_branch
     """
     current_branch = get_current_branch_name
@@ -92,3 +92,94 @@ def ensure_local_image(owner, tool, version):
     if (build_docker_cmd("images", owner, tool, version) == ''):
         print("Image {}/{}:{} does not exist locally for tagging, pulling...\n".format(owner, tool, version))
         os.system(build_docker_cmd("build", owner, tool, version))
+
+
+def build_images(owner, changed_paths):
+    """
+    Given
+    1. a Docker repo owner (e.g. "medforomics") and
+    2. a list of relative changed_paths to Dockerfiles (e.g. "fastqc/0.11.4/Dockerfile bwa/0.7.12/Dockerfile", issue a docker build command and tag any versions with a latest symlink
+    """
+    print("Building changed Dockerfiles...\n")
+    # Check for Dockerfile changes first
+    for changed_path in changed_paths:
+        tool = changed_path.split('/')[0]
+        version = changed_path.split('/')[1]
+        filename = changed_path.split('/')[2]
+        if (filename.lower() == "dockerfile" and version != "latest"):
+            attempted_build = 1
+            print("Building {}/{}:{}...".format(owner, tool, version))
+            os.system(build_docker_cmd("build", owner, tool, version))
+        # Check if there is a symlink in the latest directory pointing to this version
+        if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
+            print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
+                                                              tool, version, owner, tool))
+            os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
+    # After building all Dockerfiles, check for any changes to latest
+    print("Updating latest tags...\n")
+    for changed_path in changed_paths:
+        tool = changed_path.split('/')[0]
+        version = changed_path.split('/')[1]
+        filename = changed_path.split('/')[2]
+        if (os.path.islink(changed_path) and filename.lower() == "" and version == "latest"):
+            # The changed file is a symlink called latest, e.g. "fastqc/latest"
+            # Determine the version it's pointing to
+            dest_version = os.path.abspath(
+                os.readlink(changed_path)).split('/')[-1]
+            # In order to tag to version, it must exist locally. If it wasn't built in previous loop, need to pull it
+            ensure_local_image(owner, tool, dest_version)
+            print("Tagging {}/{}:{} as {}/{}:latest...\n".format(owner,
+                                                                 tool, dest_version, owner, tool))
+            os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
+    if (attempted_build == ""):
+        print("No changes to Dockerfiles or latest symlinks detected, nothing to build.\n")
+
+
+def push_images(owner, changed_paths):
+    """
+    Given
+    1. a Docker repo owner (e.g. "medforomics") and
+    2. a list of relative path to Dockerfiles (e.g. "fastqc/0.11.4/Dockerfile bwa/0.7.12/Dockerfile",
+    issue a docker push command for the images built by build_images
+    """
+    for changed_path in changed_paths:
+        tool = changed_path.split('/')[0]
+        version = changed_path.split('/')[1]
+        filename = changed_path.split('/')[2]
+        if (filename.lower() == "dockerfile" and version != "latest"):
+            attempted_push = "1"
+            print("Pushing {}/{}:{}...".format(owner, tool, version))
+            os.system(build_docker_cmd("build", owner, tool, version))
+            # Check if there's a symlink {}/latest pointing to THIS version
+            if (os.readlink(tool + "/latest/Dockerfile") == os.readlink(tool + "/" + version + "/Dockerfile")):
+                print("Pushing {}/{}:latest...".format(owner, tool))
+                os.system(build_docker_cmd("push", owner, tool, "latest"))
+    # After pushing all Dockerfiles, check for any changes to latest and push those
+    print("Pushing latest tags...\n")
+    for changed_path in changed_paths:
+        tool = changed_path.split('/')[0]
+        version = changed_path.split('/')[1]
+        filename = changed_path.split('/')[2]
+        if (os.path.islink(changed_path) and filename.lower() == "" and version == "latest"):
+            attempted_push = "1"
+            # The changed file is a symlink called latest, e.g. "fastqc/latest"
+            # Determine the version it's pointing to
+            print("Pushing {}/{}:latest...".format(owner, tool))
+            os.system(build_docker_cmd("build", owner, tool, "latest"))
+    if (attempted_push == ""):
+        print("No changes to Dockerfiles or latest symlinks detected, nothing to push")
+
+
+def print_changed(range, paths):
+    print("Changed files in ($range)\n")
+    for changed_path in paths:
+        print(changed_path)
+
+
+def check_org():
+    if (os.environ['DOCKERHUB_ORG'] == ""):
+        print("Error: DOCKERHUB_ORG is empty\nPlease ensure DOCKERHUB_ORG is set to the name of the Docker Hub organization.\n")
+        exit(1)
+    else:
+        print("Using Docker Hub org as {}...".format(
+            os.environ['DOCKERHUB_ORG']))
