@@ -53,10 +53,10 @@ def get_compare_range():
         # When not on the deploy branch, always compare with the deploy branch
         range_start = "origin/$DEPLOY_BRANCH"
         range_end = "HEAD"
-    print(range_start + " " + range_end)
+    return (range_start + " " + range_end)
 
 
-def build_docker_cmd(command, owner, source, tag, tool, version):
+def build_docker_cmd(command, owner, tool, version, source="NA"):
     """
     Given a docker repo owner, image name, and version, produce an appropriate local docker command
     """
@@ -64,23 +64,31 @@ def build_docker_cmd(command, owner, source, tag, tool, version):
     command = command.lower()
     # Generate local build command
     if (command == "build"):
-        docker_cmd = "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}".format(
+        return "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}".format(
             tool, version, owner, tool, version, tool, version)
     # Generate a command to return the image ID
     elif (command == "images"):
-        docker_cmd = "docker images {}/{}:{} -q".format(owner, tool, tag)
+        return "docker images {}/{}:{} -q".format(owner, tool, version)
     # Generate pull command
     elif (command == "pull"):
-        docker_cmd = "docker pull {}/{}:{}".format(owner, tool, version)
+        return "docker pull {}/{}:{}".format(owner, tool, version)
     # Generate push command
     elif (command == "push"):
-        docker_cmd = "docker push {}/{}:{}".format(owner, tool, version)
+        return "docker push {}/{}:{}".format(owner, tool, version)
     # Generate tag command
     elif (command == "tag"):
-        docker_cmd = "docker tag {}/{}:{} {}/{}:{}".format(
-            owner, tool, source, owner, tool, tag)
+        return "docker tag {}/{}:{} {}/{}:{}".format(
+            owner, tool, source, owner, tool, version)
     # If command not recognized, error out
     else:
         print("Error, command \"{}\" not recognized, please verify it is one of the following: build, images, pull, push, tag\n.".format(command))
         exit(1)
-    print(docker_cmd)
+
+
+def ensure_local_image(owner, tool, version):
+    """
+    Given a docker repo owner, image name, and version, check if it exists locally and pull if necessary
+    """
+    if (build_docker_cmd("images", owner, tool, version) == ''):
+        print("Image {}/{}:{} does not exist locally for tagging, pulling...\n".format(owner, tool, version))
+        os.system(build_docker_cmd("build", owner, tool, version))
