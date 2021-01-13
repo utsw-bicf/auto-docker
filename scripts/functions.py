@@ -10,7 +10,13 @@ import yaml
 
 
 def get_deploy_branch():
-    return os.environ['DEPLOY_BRANCH']
+    if 'DEPLOY_BRANCH' in os.environ:
+        print("Deploy branch set to {}...".format(
+            os.environ.get('DEPLOY_BRANCH')))
+    else:
+        print("Error: DEPLOY_BRANCH is empty\nPlease ensure DEPLOY_BRANCH is set to the name of the default branch used for deployment (i.e. 'develop').\n")
+        exit(1)
+    return os.environ.get('DEPLOY_BRANCH')
 
 
 def get_current_branch_name():
@@ -177,9 +183,10 @@ def print_changed(range, paths):
 
 
 def check_org():
-    if (os.environ['DOCKERHUB_ORG'] == ""):
+    if 'DOCKERHUB_ORG' in os.environ:
+        print("Using Docker Hub org as {}...".format(
+            os.environ.get('DOCKERHUB_ORG')))
+    else:
         print("Error: DOCKERHUB_ORG is empty\nPlease ensure DOCKERHUB_ORG is set to the name of the Docker Hub organization.\n")
         exit(1)
-    else:
-        print("Using Docker Hub org as {}...".format(
-            os.environ['DOCKERHUB_ORG']))
+    return os.environ.get('DOCKERHUB_ORG')
