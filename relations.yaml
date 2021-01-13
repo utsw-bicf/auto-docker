@@ -1,7 +1,21 @@
 images:
   base:
     1.0.0:
-      children: [null]
-      parents: ["ubuntu:18.04"]
-latest: { base: 1.0.0 }
+      children:
+      - null
+      parents:
+      - ubuntu:18.04
+    1.0.1:
+      children:
+      - null
+      parents:
+      - ubuntu:18.04
+  ubuntu:
+    '18.04':
+      children:
+      - base:1.0.1
+      parents: []
+latest:
+  base: 1.0.1
+  ubuntu: '18.04'
 terminated: {}
