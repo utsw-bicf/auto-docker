@@ -57,9 +57,13 @@ def get_compare_range():
     else:
         # Not on the deploy branch (e.g. develop)
         # When not on the deploy branch, always compare with the deploy branch
-        range_start = "origin/$DEPLOY_BRANCH"
+        range_start = "origin/" + get_deploy_branch()
         range_end = "HEAD"
     return (range_start + " " + range_end)
+
+
+def changed_paths_in_range(compare_range):
+    return (os.system("git diff --name-only --diff-filter=d " + compare_range))
 
 
 def build_docker_cmd(command, owner, tool, version, source="NA"):
@@ -70,7 +74,7 @@ def build_docker_cmd(command, owner, tool, version, source="NA"):
     command = command.lower()
     # Generate local build command
     if (command == "build"):
-        return "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}".format(
+        return "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}/\"".format(
             tool, version, owner, tool, version, tool, version)
     # Generate a command to return the image ID
     elif (command == "images"):
@@ -95,7 +99,7 @@ def ensure_local_image(owner, tool, version):
     """
     Given a docker repo owner, image name, and version, check if it exists locally and pull if necessary
     """
-    if (build_docker_cmd("images", owner, tool, version) == ''):
+    if (os.system(build_docker_cmd("images", owner, tool, version)) == ''):
         print("Image {}/{}:{} does not exist locally for tagging, pulling...\n".format(owner, tool, version))
         os.system(build_docker_cmd("build", owner, tool, version))
 
@@ -109,9 +113,12 @@ def build_images(owner, changed_paths):
     print("Building changed Dockerfiles...\n")
     # Check for Dockerfile changes first
     for changed_path in changed_paths:
-        tool = changed_path.split('/')[0]
-        version = changed_path.split('/')[1]
-        filename = changed_path.split('/')[2]
+        print(changed_path)
+        tool = changed_path.split("/")[0]
+        print(tool)
+        version = changed_path.split("/")[1]
+        print(version)
+        filename = changed_path.split("/")[2]
         if (filename.lower() == "dockerfile" and version != "latest"):
             attempted_build = 1
             print("Building {}/{}:{}...".format(owner, tool, version))
