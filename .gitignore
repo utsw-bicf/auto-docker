@@ -2,3 +2,4 @@
 .vscode/settings.json
 scripts/__pycache
 *.pyc
+*.pyc

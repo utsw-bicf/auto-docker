@@ -129,10 +129,11 @@ def build_images(owner, changed_paths):
             print("Building {}/{}:{}...".format(owner, tool, version))
             os.system(build_docker_cmd("build", owner, tool, version))
         # Check if there is a symlink in the latest directory pointing to this version
-        if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
-            print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
-                                                              tool, version, owner, tool))
-            os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
+        if (os.path.islink(changed_path)):
+            if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
+                print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
+                                                                tool, version, owner, tool))
+                os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
     # After building all Dockerfiles, check for any changes to latest
     print("Updating latest tags...\n")
     for changed_path in changed_paths:

@@ -37,6 +37,6 @@ def test_changed_paths_in_range():
 
 @pytest.mark.test_print_changed
 def test_print_changed():
-    test_out = test_vars.append(functions.print_changed(test_vars[2], test_vars[3]))
+    test_out = functions.print_changed(test_vars[2], test_vars[3])
     print(test_out)
     assert test_out == "Changed files between origin/develop HEAD:\n.github/workflows/workflow-ci.yml\n.gitignore\nbase/1.0.1/Dockerfile\nbase/1.0.1/unittest.yml\nrelations.yaml\nscripts/__pycache__/functions.cpython-37.pyc\nscripts/functions.py\ntests/test_functions.py"
