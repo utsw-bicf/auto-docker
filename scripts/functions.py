@@ -4,8 +4,9 @@ Conversion of basic fuctions used in the CI from bash to Python.
 """
 
 import os
-import sys
 import re
+import sys
+import subprocess
 import yaml
 
 
@@ -63,7 +64,11 @@ def get_compare_range():
 
 
 def changed_paths_in_range(compare_range):
-    return (os.system("git diff --name-only --diff-filter=d " + compare_range))
+    cmd = "git diff --name-only --diff-filter=d {}".format(
+        compare_range).split()
+    paths_run = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    return paths_run.communicate()[0].split("\n")[:-1]
 
 
 def build_docker_cmd(command, owner, tool, version, source="NA"):
@@ -183,9 +188,9 @@ def push_images(owner, changed_paths):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to push")
 
 
-def print_changed(range, paths):
-    print("Changed files in {}\n".format(range))
-    for changed_path in paths:
+def print_changed(range, changed_paths):
+    print("Changed files between {}:".format(range))
+    for changed_path in changed_paths:
         print(changed_path)
 
 
