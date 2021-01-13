@@ -184,7 +184,7 @@ def push_images(owner, changed_paths):
 
 
 def print_changed(range, paths):
-    print("Changed files in ($range)\n")
+    print("Changed files in {}\n".format(range))
     for changed_path in paths:
         print(changed_path)
 
