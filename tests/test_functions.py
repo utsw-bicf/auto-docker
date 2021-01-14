@@ -36,7 +36,15 @@ def test_changed_paths_in_range():
     assert test_vars[3] == ['.github/workflows/workflow-ci.yml', '.gitignore', 'base/1.0.1/Dockerfile', 'base/1.0.1/unittest.yml', 'relations.yaml', 'scripts/__pycache__/functions.cpython-37.pyc', 'scripts/functions.py', 'tests/test_functions.py']
 
 @pytest.mark.test_print_changed
-def test_print_changed():
-    test_out = functions.print_changed(test_vars[2], test_vars[3])
-    print(test_out)
-    assert test_out == "Changed files between origin/develop HEAD:\n.github/workflows/workflow-ci.yml\n.gitignore\nbase/1.0.1/Dockerfile\nbase/1.0.1/unittest.yml\nrelations.yaml\nscripts/__pycache__/functions.cpython-37.pyc\nscripts/functions.py\ntests/test_functions.py"
+def test_print_changed(capfd):
+    functions.print_changed(test_vars[2], test_vars[3])
+    test_out, test_err = capfd.readouterr()
+    print(test_err)
+    assert test_out == "Changed files between origin/develop HEAD:\n.github/workflows/workflow-ci.yml\n.gitignore\nbase/1.0.1/Dockerfile\nbase/1.0.1/unittest.yml\nrelations.yaml\nscripts/__pycache__/functions.cpython-37.pyc\nscripts/functions.py\ntests/test_functions.py\n"
+
+@pytest.mark.test_build_images
+def test_build_images(capfd):
+    functions.build_images(test_vars[0], test_vars[3])
+    test_out, test_err = capfd.readouterr()
+    print(test_err)
+    assert test_out == ""

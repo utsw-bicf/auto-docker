@@ -118,24 +118,53 @@ def build_images(owner, changed_paths):
     print("Building changed Dockerfiles...\n")
     # Check for Dockerfile changes first
     for changed_path in changed_paths:
-        print(changed_path)
-        tool = changed_path.split("/")[0]
-        print(tool)
-        version = changed_path.split("/")[1]
-        print(version)
-        filename = changed_path.split("/")[2]
-        if (filename.lower() == "dockerfile" and version != "latest"):
-            attempted_build = 1
-            print("Building {}/{}:{}...".format(owner, tool, version))
-            os.system(build_docker_cmd("build", owner, tool, version))
-        # Check if there is a symlink in the latest directory pointing to this version
-        if (os.path.islink(changed_path)):
-            if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
-                print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
-                                                                tool, version, owner, tool))
-                os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
+        temp_array = changed_path.split('/')
+        print(temp_array)
+        if temp_array[0]:
+            tool = temp_array[0]
+        else:
+            tool = None
+        if temp_array[1]:
+            version = temp_array[1]
+        else:
+            version = None
+        if temp_array[2]:
+            version = temp_array[2]
+        else:
+            version = None
+         if (filename.lower() == "dockerfile" and version != "latest"):
+             attempted_build = 1
+             print("Building {}/{}:{}...".format(owner, tool, version))
+             os.system(build_docker_cmd("build", owner, tool, version))
+            # Check if there is a symlink in the latest directory pointing to this version 
+            if (os.path.islink(changed_path)):
+               if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
+                    print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner, tool, version, owner, tool))
+                    os.system(functions.build_docker_cmd("tag", owner, tool, version, "latest"))
+
+        # Original Code, not working, giving a length error
+        """print(changed_path)
+        temp_array = changed_path.split('/')
+        print(temp_array)
+        if len(temp_array) >= 3:
+            tool = changed_path.split("/")[0]
+            print(tool)
+            version = changed_path.split("/")[1]
+            print(version)
+            filename = changed_path.split("/")[2]
+            print(filename)
+            if (filename.lower() == "dockerfile" and version != "latest"):
+                attempted_build = 1
+                print("Building {}/{}:{}...".format(owner, tool, version))
+                os.system(functions.build_docker_cmd("build", owner, tool, version))
+            # Check if there is a symlink in the latest directory pointing to this version
+            if (os.path.islink(changed_path)):
+                if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
+                    print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
+                                                                    tool, version, owner, tool))
+                    os.system(functions.build_docker_cmd("tag", owner, tool, version, "latest"))"""
     # After building all Dockerfiles, check for any changes to latest
-    print("Updating latest tags...\n")
+    """print("Updating latest tags...\n")
     for changed_path in changed_paths:
         tool = changed_path.split('/')[0]
         version = changed_path.split('/')[1]
@@ -149,7 +178,7 @@ def build_images(owner, changed_paths):
             ensure_local_image(owner, tool, dest_version)
             print("Tagging {}/{}:{} as {}/{}:latest...\n".format(owner,
                                                                  tool, dest_version, owner, tool))
-            os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
+            os.system(build_docker_cmd("tag", owner, tool, version, "latest"))"""
     if (attempted_build == ""):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to build.\n")
 
