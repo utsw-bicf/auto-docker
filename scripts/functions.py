@@ -73,7 +73,8 @@ def changed_paths_in_range(compare_range):
 
 def build_docker_cmd(command, owner, tool, version, source="NA"):
     """
-    Given a docker repo owner, image name, and version, produce an appropriate local docker command
+    Given a docker repo owner, image name, and version, produce an
+    appropriate local docker command
     """
     # Ensure the command is lower-case
     command = command.lower()
@@ -102,7 +103,8 @@ def build_docker_cmd(command, owner, tool, version, source="NA"):
 
 def ensure_local_image(owner, tool, version):
     """
-    Given a docker repo owner, image name, and version, check if it exists locally and pull if necessary
+    Given a docker repo owner, image name, and version, check if it exists
+    locally and pull if necessary
     """
     if (os.system(build_docker_cmd("images", owner, tool, version)) == ''):
         print("Image {}/{}:{} does not exist locally for tagging, pulling...\n".format(owner, tool, version))
@@ -113,46 +115,16 @@ def build_images(owner, changed_paths):
     """
     Given
     1. a Docker repo owner (e.g. "medforomics") and
-    2. a list of relative changed_paths to Dockerfiles (e.g. "fastqc/0.11.4/Dockerfile bwa/0.7.12/Dockerfile", issue a docker build command and tag any versions with a latest symlink
+    2. a list of relative changed_paths to Dockerfiles
+    (e.g. "fastqc/0.11.4/Dockerfile bwa/0.7.12/Dockerfile",
+    issue a docker build command and tag any versions with a latest symlink
     """
     print("Building changed Dockerfiles...\n")
+    attempted_build=0
     # Check for Dockerfile changes first
     for changed_path in changed_paths:
-        temp_array = changed_path.split('/')
-        print(temp_array)
-        if temp_array[0]:
-            tool = temp_array[0]
-        else:
-            tool = None
-        if temp_array[1]:
-            version = temp_array[1]
-        else:
-            version = None
-        if temp_array[2]:
-            version = temp_array[2]
-        else:
-            version = None
-         if (filename.lower() == "dockerfile" and version != "latest"):
-             attempted_build = 1
-             print("Building {}/{}:{}...".format(owner, tool, version))
-             os.system(build_docker_cmd("build", owner, tool, version))
-            # Check if there is a symlink in the latest directory pointing to this version 
-            if (os.path.islink(changed_path)):
-               if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
-                    print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner, tool, version, owner, tool))
-                    os.system(functions.build_docker_cmd("tag", owner, tool, version, "latest"))
-
-        # Original Code, not working, giving a length error
-        """print(changed_path)
-        temp_array = changed_path.split('/')
-        print(temp_array)
-        if len(temp_array) >= 3:
-            tool = changed_path.split("/")[0]
-            print(tool)
-            version = changed_path.split("/")[1]
-            print(version)
-            filename = changed_path.split("/")[2]
-            print(filename)
+        if changed_paths.count('/') == 2:
+            tool, version, filename = changed_path.split('/')
             if (filename.lower() == "dockerfile" and version != "latest"):
                 attempted_build = 1
                 print("Building {}/{}:{}...".format(owner, tool, version))
@@ -162,23 +134,26 @@ def build_images(owner, changed_paths):
                 if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
                     print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
                                                                     tool, version, owner, tool))
-                    os.system(functions.build_docker_cmd("tag", owner, tool, version, "latest"))"""
+                    os.system(functions.build_docker_cmd("tag", owner, tool, version, "latest"))
+
     # After building all Dockerfiles, check for any changes to latest
-    """print("Updating latest tags...\n")
+
+    print("Updating latest tags...\n")
     for changed_path in changed_paths:
-        tool = changed_path.split('/')[0]
-        version = changed_path.split('/')[1]
-        filename = changed_path.split('/')[2]
-        if (os.path.islink(changed_path) and filename.lower() == "" and version == "latest"):
-            # The changed file is a symlink called latest, e.g. "fastqc/latest"
-            # Determine the version it's pointing to
-            dest_version = os.path.abspath(
-                os.readlink(changed_path)).split('/')[-1]
-            # In order to tag to version, it must exist locally. If it wasn't built in previous loop, need to pull it
-            ensure_local_image(owner, tool, dest_version)
-            print("Tagging {}/{}:{} as {}/{}:latest...\n".format(owner,
-                                                                 tool, dest_version, owner, tool))
-            os.system(build_docker_cmd("tag", owner, tool, version, "latest"))"""
+        if changed_paths.count('/') == 2:
+            tool, version, filename = changed_path.split('/')
+            if (os.path.islink(changed_path) and filename.lower() == "" and version == "latest"):
+                attempted_build="1"
+                # The changed file is a symlink called latest, e.g. "fastqc/latest"
+                # Determine the version it's pointing to
+                dest_version = os.path.abspath(
+                    os.readlink(changed_path)).split('/')[-1]
+                # In order to tag to version, it must exist locally. If it wasn't built in previous loop, need to pull it
+                ensure_local_image(owner, tool, dest_version)
+                print("Tagging {}/{}:{} as {}/{}:latest...\n".format(owner,
+                                                                     tool, dest_version, owner, tool))
+                os.system(build_docker_cmd("tag", owner, tool, version, "latest"))
+
     if (attempted_build == ""):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to build.\n")
 
