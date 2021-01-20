@@ -8,6 +8,7 @@ import re
 import sys
 import subprocess
 import yaml
+import check_pre_exist
 
 
 def get_deploy_branch():
@@ -80,7 +81,7 @@ def build_docker_cmd(command, owner, tool, version, source="NA"):
     command = command.lower()
     # Generate local build command
     if (command == "build"):
-        cmd = "docker build -f \'{}/{}/Dockerfile\' -t \'{}/{}:{}\' \'{}/{}/\'".format(
+        cmd = "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}/\"".format(
             tool, version, owner, tool, version, tool, version)
         return cmd
     # Generate a command to return the image ID
@@ -98,7 +99,7 @@ def build_docker_cmd(command, owner, tool, version, source="NA"):
     # Generate tag command
     elif (command == "tag"):
         cmd = "docker tag {}/{}:{} {}/{}:{}".format(
-            owner, tool, source, owner, tool, version)
+            owner, tool, version, owner, tool, source)
         return cmd
     # If command not recognized, error out
     else:
@@ -128,43 +129,55 @@ def build_images(owner, changed_paths):
     attempted_build = 0
     # Check for Dockerfile changes first
     for changed_path in changed_paths:
-        if changed_paths.count('/') == 2:
+        if changed_path.count('/') == 2:
             tool, version, filename = changed_path.split('/')
             if (filename.lower() == "dockerfile" and version != "latest"):
                 attempted_build = 1
                 print("Building {}/{}:{}...".format(owner, tool, version))
-                subprocess.Popen(build_docker_cmd(
-                    "build", owner, tool, version).replace('\"', '').split(" "))
-                print("Successfully built {}/{}:{}...".format(owner, tool, version))
-            # Check if there is a symlink in the latest directory pointing to this version
-            if (os.path.islink(changed_path)):
-                if (os.path.abspath(tool + "/latest/Dockerfile") == os.path.abspath(os.readlink(changed_path))):
-                    print("Tagging {}/{}:{} as {}/{}:latest\n".format(owner,
-                                                                      tool, version, owner, tool))
-                    subprocess.run(build_docker_cmd(
-                        "tag", owner, tool, version, "latest"))
-
-    # After building all Dockerfiles, check for any changes to latest
-
-    print("Updating latest tags...\n")
-    for changed_path in changed_paths:
-        if changed_paths.count('/') == 2:
-            tool, version, filename = changed_path.split('/')
-            if (os.path.islink(changed_path) and filename.lower() == "" and version == "latest"):
-                attempted_build = "1"
-                # The changed file is a symlink called latest, e.g. "fastqc/latest"
-                # Determine the version it's pointing to
-                dest_version = os.path.abspath(
-                    os.readlink(changed_path)).split('/')[-1]
-                # In order to tag to version, it must exist locally. If it wasn't built in previous loop, need to pull it
-                ensure_local_image(owner, tool, dest_version)
-                print("Tagging {}/{}:{} as {}/{}:latest...\n".format(owner,
-                                                                     tool, dest_version, owner, tool))
-                os.system(build_docker_cmd(
-                    "tag", owner, tool, version, "latest"))
-
+                build_command = build_docker_cmd(
+                    "build", owner, tool, version).replace('\"', '').split(" ")
+                term = subprocess.Popen(build_command)
+                term_code = term.wait()
+                if term_code == 0:
+                    print("Successfully built {}/{}:{}...".format(owner, tool, version))
+                else:
+                    print("ERROR: Unable to build image!\n{}".format(
+                        term.communicate()[2]))
+                    exit(1)
+                # Check if there is a symlink in the latest directory pointing to the newly-built version
+                check_latest_path(owner, tool, version)
     if (attempted_build == ""):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to build.\n")
+
+
+def check_latest_path(owner, tool, version):
+    """
+    Checks to see if there is a 'latest' directory that points to the currently selected tool and version.
+    """
+    if os.path.exists(os.path.abspath("{}/latest".format(tool))):
+        print("Path to current 'latest' version found, verifying which version it points to...")
+        # If the currently selected image is already the latest
+        if os.path.realpath("{}/latest".format(tool)) == os.path.abspath("{}/{}".format(tool, version)):
+            print("Current version already linked as latest version.")
+        # If the new image is replacing the current image
+        else:
+            print("Latest tag found, but is not pointing to the current version, setting new link and tagging {} as 'latest'".format(
+                version))
+            os.remove("{}/latest".format(tool))
+            os.symlink("../{}/{}".format(tool, version),
+                       "{}/latest".format(tool))
+            tag_command = (build_docker_cmd("tag", owner, tool,
+                                            version, "latest")).replace('\"', '').split(" ")
+            subprocess.Popen(tag_command)
+    # If no image has been tagged as 'latest'
+    else:
+        print("No currently set 'latest' image, creating link and tagging as 'latest'.")
+        source_dir = "../{}/{}".format(tool, version)
+        dest_dir = "{}/latest".format(tool)
+        os.symlink(source_dir, os.path.relpath(dest_dir))
+        tag_command = (build_docker_cmd("tag", owner, tool,
+                                        version, "latest")).replace('\"', '').split(" ")
+        subprocess.Popen(tag_command)
 
 
 def push_images(owner, changed_paths):
@@ -175,29 +188,26 @@ def push_images(owner, changed_paths):
     issue a docker push command for the images built by build_images
     """
     for changed_path in changed_paths:
-        tool = changed_path.split('/')[0]
-        version = changed_path.split('/')[1]
-        filename = changed_path.split('/')[2]
-        if (filename.lower() == "dockerfile" and version != "latest"):
-            attempted_push = "1"
-            print("Pushing {}/{}:{}...".format(owner, tool, version))
-            os.system(build_docker_cmd("build", owner, tool, version))
-            # Check if there's a symlink {}/latest pointing to THIS version
-            if (os.readlink(tool + "/latest/Dockerfile") == os.readlink(tool + "/" + version + "/Dockerfile")):
-                print("Pushing {}/{}:latest...".format(owner, tool))
-                os.system(build_docker_cmd("push", owner, tool, "latest"))
-    # After pushing all Dockerfiles, check for any changes to latest and push those
-    print("Pushing latest tags...\n")
-    for changed_path in changed_paths:
-        tool = changed_path.split('/')[0]
-        version = changed_path.split('/')[1]
-        filename = changed_path.split('/')[2]
-        if (os.path.islink(changed_path) and filename.lower() == "" and version == "latest"):
-            attempted_push = "1"
-            # The changed file is a symlink called latest, e.g. "fastqc/latest"
-            # Determine the version it's pointing to
-            print("Pushing {}/{}:latest...".format(owner, tool))
-            os.system(build_docker_cmd("build", owner, tool, "latest"))
+        if changed_path.count('/') == 2:
+            tool, version, filename = changed_path.split('/')
+            if (filename.lower() == "dockerfile"):
+                attempted_push = "1"
+                print("Pushing {}/{}:{}...".format(owner, tool, version))
+                push_command = build_docker_cmd("push", owner, tool, version).replace(
+                    '\"', '').split(" ")
+                subprocess.Popen(push_command)
+                # Check if there's a symlink {}/latest pointing to THIS version
+                if version != 'latest':
+                    check_latest_path(owner, tool, version)
+                push_command = subprocess.Popen(push_command)
+                push_code = push_command.wait()
+                if push_code == 0:
+                    print(
+                        "Successfully pushed new branch based on {}/{}:{}".format(owner, tool, version))
+                else:
+                    print("ERROR: Image for {}/{}:{} was unable to be pushed, please try again after verifying you have access to {}/{}:{} on DockerHub!".format(
+                        owner, tool, version, owner, tool, version))
+                    exit(1)
     if (attempted_push == ""):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to push")
 
