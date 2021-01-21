@@ -81,7 +81,7 @@ def build_docker_cmd(command, owner, tool, version, source="NA"):
     command = command.lower()
     # Generate local build command
     if (command == "build"):
-        cmd = "docker build -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}/\"".format(
+        cmd = "docker build -q -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}/\"".format(
             tool, version, owner, tool, version, tool, version)
         return cmd
     # Generate a command to return the image ID

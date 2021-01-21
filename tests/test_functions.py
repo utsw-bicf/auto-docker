@@ -64,8 +64,8 @@ def test_build_images(capfd):
     functions.build_images(test_vars[0], test_vars[3])
     test_out, test_err = capfd.readouterr()
     print(test_err)
-    assert test_out == "Building changed Dockerfiles...\n\nBuilding bicf/base:1.0.1...\nSuccessfully built bicf/base:1.0.1...\nNo 'latest' version found, tagging and making links to base/latest\nUpdating latest tags...\n\n"
-    run_command = "docker image ls | grep 'bicf/base' | grep '1.0.1' | wc -l"
+    assert test_out == "Building changed Dockerfiles...\n\nBuilding bicf/base:1.0.1...\nsha256:451fd06cd4d9c27c35005098ec83b1fd7adf9acf3df905fa5015bec56b4474d3\nSuccessfully built bicf/base:1.0.1...\nNo currently set 'latest' image, creating link and tagging as 'latest'.\n"
+    run_command = "docker image ls | grep 'bicf/base' | grep \"1.0.1\\|latest\" | wc -l"
     os.system(run_command)
     test_out, test_err = capfd.readouterr()
-    assert test_out == "\n1\n"
+    assert test_out == "\n2\n"

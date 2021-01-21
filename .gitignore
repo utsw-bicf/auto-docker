@@ -279,3 +279,6 @@ $RECYCLE.BIN/
 # End of https://www.gitignore.io/api/r,perl,linux,macos,python,windows,microsoftoffice
 
 .vscode/settings.json
+temp.py
+temp.txt
+temp-BICF-JG-LE4350.txt
