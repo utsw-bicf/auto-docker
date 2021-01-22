@@ -59,13 +59,24 @@ def build_docker_cmd(capfd):
     assert test_output == ['docker build -f "base/1.0.1/Dockerfile" -t "bicf/base:1.0.1" "base/1.0.1/"', 'docker images bicf/base:1.0.1 -q',
                            'docker pull bicf/base:1.0.1', 'docker push bicf/base:1.0.1', 'docker tag bicf/base:1.0.0 bicf/base:1.0.1']
 
+
 @pytest.mark.test_build_images
 def test_build_images(capfd):
     functions.build_images(test_vars[0], test_vars[3])
     test_out, test_err = capfd.readouterr()
     print(test_err)
-    assert test_out == "Building changed Dockerfiles...\n\nBuilding bicf/base:1.0.1...\nsha256:451fd06cd4d9c27c35005098ec83b1fd7adf9acf3df905fa5015bec56b4474d3\nSuccessfully built bicf/base:1.0.1...\nNo currently set 'latest' image, creating link and tagging as 'latest'.\n"
+    assert "Building bicf/base:1.0.1...\nsha256:451fd06cd4d9c27c35005098ec83b1fd7adf9acf3df905fa5015bec56b4474d3\nSuccessfully built bicf/base:1.0.1...\n" in test_out
     run_command = "docker image ls | grep 'bicf/base' | grep \"1.0.1\\|latest\" | wc -l"
     os.system(run_command)
     test_out, test_err = capfd.readouterr()
     assert test_out == "\n2\n"
+    assert os.path.realpath(
+        'base/latest') == '/mnt/c/Users/s181706.SWMED/OneDrive - University of Texas Southwestern/Documents/GitHub/auto-docker/base/1.0.1'
+
+
+@pytest.mark.test_push_images
+def test_push_images(capfd):
+    functions.push_images(test_vars[0], test_vars[3])
+    test_out, test_err = capfd.readouterr()
+    print(test_err)
+    assert "1.0.1: digest: sha256:c77ddaf5cd5d6e562263f454486047e4d12fb5b38d77a5ce57208d94cf493197 size: 1780\nSuccessfully pushed new branch based on bicf/base:1.0.1" in test_out
