@@ -4,11 +4,8 @@ Conversion of basic fuctions used in the CI from bash to Python.
 """
 
 import os
-import re
 import sys
 import subprocess
-import yaml
-import check_pre_exist
 
 
 def get_deploy_branch():
@@ -22,7 +19,8 @@ def get_deploy_branch():
 
 
 def get_current_branch_name():
-    return os.system("echo ${GITHUB_REF##*/}")
+    get_branch_cmd = "echo ${GITHUB_REF##*/}".split()
+    return subprocess.Popen(get_branch_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).communicate()[0]
 
 
 def fetch_develop():
@@ -30,19 +28,44 @@ def fetch_develop():
     Keep track of which branch we are on.
     We are on a detached head, and we need to be able to go back to it.
     """
-    build_head = os.system("git rev-parse HEAD")
+    get_build_head_cmd = "git rev-parse HEAD".split()
+    build_head = subprocess.Popen(
+        get_build_head_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).communicate()[0]
     current_branch = get_current_branch_name
     deploy_branch = get_deploy_branch
     if (current_branch != deploy_branch):
         # If branch is not deploy branch (e.g. develop)
         # fetch the current develop branch
-        os.system(
-            "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*;")
-        os.system("git fetch origin $DEPLOY_BRANCH")
+        git_config_cmd = "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*;".split()
+        git_fetch_cmd = "git fetch origin $DEPLOY_BRANCH".split()
+        git_checkout_dev_cmd = "git checkout -qf $DEPLOY_BRANCH".split()
+        git_checkout_build_cmd = "git checkout {}".format(build_head).split()
+        tmp_code = subprocess.Popen(
+            git_config_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if tmp_code.wait() != 0:
+            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
+                git_config_cmd, tmp_code.communicate()[1]))
+            exit(1)
+        tmp_code = subprocess.Popen(
+            git_fetch_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if tmp_code.wait() != 0:
+            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
+                git_fetch_cmd, tmp_code.communicate()[1]))
+            exit(1)
         # create the tracking branch
-        os.system("git checkout -qf $DEPLOY_BRANCH")
+        tmp_code = subprocess.Popen(
+            git_checkout_dev_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if tmp_code.wait() != 0:
+            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
+                git_checkout_dev_cmd, tmp_code.communicate()[1]))
+            exit(1)
         # finally, go back to where we were at the beginning
-        os.system("git checkout " + build_head)
+        tmp_code = subprocess.Popen(
+            git_checkout_build_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if tmp_code.wait() != 0:
+            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
+                git_checkout_build_cmd, tmp_code.communicate()[1]))
+            exit(1)
 
 
 def get_compare_range():
@@ -68,7 +91,7 @@ def changed_paths_in_range(compare_range):
     cmd = "git diff --name-only --diff-filter=d {}".format(
         compare_range).split()
     paths_run = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, universal_newlines=True)
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     return paths_run.communicate()[0].split("\n")[:-1]
 
 
@@ -112,9 +135,18 @@ def ensure_local_image(owner, tool, version):
     Given a docker repo owner, image name, and version, check if it exists
     locally and pull if necessary
     """
-    if (os.system(build_docker_cmd("images", owner, tool, version)) == ''):
+    image_cmd = build_docker_cmd("images", owner, tool, version).split()
+    image_run = subprocess.Popen(
+        image_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    if image_run.communicate()[0] == '':
         print("Image {}/{}:{} does not exist locally for tagging, pulling...\n".format(owner, tool, version))
-        os.system(build_docker_cmd("build", owner, tool, version))
+        build_cmd = build_docker_cmd(
+            "build", owner, tool, version).replace('\"', '').split()
+        build_run = subprocess.Popen(
+            build_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if build_run.wait() != 0:
+            print("Error: Unable to build image \'{}/{}:{}\'\nError Log:\n{}".format(
+                owner, tool, version, build_run.communicate()[1]))
 
 
 def build_images(owner, changed_paths):
@@ -131,7 +163,7 @@ def build_images(owner, changed_paths):
     for changed_path in changed_paths:
         if changed_path.count('/') == 2:
             tool, version, filename = changed_path.split('/')
-            if (filename.lower() == "dockerfile" and version != "latest"):
+            if (filename.lower() == "dockerfile"):
                 attempted_build = 1
                 print("Building {}/{}:{}...".format(owner, tool, version))
                 build_command = build_docker_cmd(
@@ -141,43 +173,11 @@ def build_images(owner, changed_paths):
                 if term_code == 0:
                     print("Successfully built {}/{}:{}...".format(owner, tool, version))
                 else:
-                    print("ERROR: Unable to build image!\n{}".format(
-                        term.communicate()[2]))
+                    print("ERROR: Unable to build image \'{}/{}:{}\'\nError Log:\n{}".format(
+                        owner, tool, version, term.communicate()[2]))
                     exit(1)
-                # Check if there is a symlink in the latest directory pointing to the newly-built version
-                check_latest_path(owner, tool, version)
     if (attempted_build == ""):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to build.\n")
-
-
-def check_latest_path(owner, tool, version):
-    """
-    Checks to see if there is a 'latest' directory that points to the currently selected tool and version.
-    """
-    if os.path.exists(os.path.abspath("{}/latest".format(tool))):
-        print("Path to current 'latest' version found, verifying which version it points to...")
-        # If the currently selected image is already the latest
-        if os.path.realpath("{}/latest".format(tool)) == os.path.abspath("{}/{}".format(tool, version)):
-            print("Current version already linked as latest version.")
-        # If the new image is replacing the current image
-        else:
-            print("Latest tag found, but is not pointing to the current version, setting new link and tagging {} as 'latest'".format(
-                version))
-            os.remove("{}/latest".format(tool))
-            os.symlink("../{}/{}".format(tool, version),
-                       "{}/latest".format(tool))
-            tag_command = (build_docker_cmd("tag", owner, tool,
-                                            version, "latest")).replace('\"', '').split(" ")
-            subprocess.Popen(tag_command)
-    # If no image has been tagged as 'latest'
-    else:
-        print("No currently set 'latest' image, creating link and tagging as 'latest'.")
-        source_dir = "../{}/{}".format(tool, version)
-        dest_dir = "{}/latest".format(tool)
-        os.symlink(source_dir, os.path.relpath(dest_dir))
-        tag_command = (build_docker_cmd("tag", owner, tool,
-                                        version, "latest")).replace('\"', '').split(" ")
-        subprocess.Popen(tag_command)
 
 
 def push_images(owner, changed_paths):
@@ -190,15 +190,11 @@ def push_images(owner, changed_paths):
     for changed_path in changed_paths:
         if changed_path.count('/') == 2:
             tool, version, filename = changed_path.split('/')
-            if (filename.lower() == "dockerfile"):
+            if filename.lower() == "dockerfile" and tool.split('_')[0] != 'test':
                 attempted_push = "1"
                 print("Pushing {}/{}:{}...".format(owner, tool, version))
                 push_command = build_docker_cmd("push", owner, tool, version).replace(
                     '\"', '').split(" ")
-                subprocess.Popen(push_command)
-                # Check if there's a symlink {}/latest pointing to THIS version
-                if version != 'latest':
-                    check_latest_path(owner, tool, version)
                 push_command = subprocess.Popen(push_command)
                 push_code = push_command.wait()
                 if push_code == 0:
@@ -208,6 +204,10 @@ def push_images(owner, changed_paths):
                     print("ERROR: Image for {}/{}:{} was unable to be pushed, please try again after verifying you have access to {}/{}:{} on DockerHub!".format(
                         owner, tool, version, owner, tool, version))
                     exit(1)
+            elif filename.lower() == "dockerfile" and tool.split('_')[0] == 'test':
+                attempted_push = "1"
+                print(
+                    "Test image found: \'{}/{}:{}\'\nSkipping push of test image".format(owner, tool, version))
     if (attempted_push == ""):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to push")
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import yaml
-import re
 import sys
 import os
 import pytest
@@ -66,12 +64,10 @@ def test_build_images(capfd):
     test_out, test_err = capfd.readouterr()
     print(test_err)
     assert "Building bicf/base:1.0.1...\nsha256:451fd06cd4d9c27c35005098ec83b1fd7adf9acf3df905fa5015bec56b4474d3\nSuccessfully built bicf/base:1.0.1...\n" in test_out
-    run_command = "docker image ls | grep 'bicf/base' | grep \"1.0.1\\|latest\" | wc -l"
+    run_command = "docker image ls | grep 'bicf/base' | grep \"1.0.1\" | wc -l"
     os.system(run_command)
     test_out, test_err = capfd.readouterr()
-    assert test_out == "\n2\n"
-    assert os.path.realpath(
-        'base/latest') == '/mnt/c/Users/s181706.SWMED/OneDrive - University of Texas Southwestern/Documents/GitHub/auto-docker/base/1.0.1'
+    assert test_out == "\n1\n"
 
 
 @pytest.mark.test_push_images
