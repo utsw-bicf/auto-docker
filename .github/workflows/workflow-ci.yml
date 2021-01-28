@@ -24,9 +24,10 @@ jobs:
           LANG: C.UTF-8
         run: |
           set -e
+          source scripts/functions.sh
           git config user.name github-actions
           git config user.email github-actions@github.com
-          source scripts/functions.sh
+          fetch_develop
           #Check to see if more than one Dockerfile has been updated, and if so, error out.
           compare_range=$(get_compare_range)
           paths=$(changed_paths_in_range "${compare_range}")
