@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Conversion of basic fuctions used in the CI from bash to Python.
-"""
 
 import os
 import sys
@@ -9,6 +6,9 @@ import subprocess
 
 
 def get_deploy_branch():
+    """
+    Returns the current DEPLOY_BRANCH variable, or fails if this is not set.
+    """
     if 'DEPLOY_BRANCH' in os.environ:
         print("Deploy branch set to {}...".format(
             os.environ.get('DEPLOY_BRANCH')))
@@ -19,14 +19,16 @@ def get_deploy_branch():
 
 
 def get_current_branch_name():
+    """
+    Returns the current branch name
+    """
     get_branch_cmd = "echo ${GITHUB_REF##*/}".split()
     return subprocess.Popen(get_branch_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).communicate()[0]
 
 
 def fetch_develop():
     """
-    Keep track of which branch we are on.
-    We are on a detached head, and we need to be able to go back to it.
+    Keep track of which branch we are on, and since we are on a detached head, and we need to be able to go back to it.
     """
     get_build_head_cmd = "git rev-parse HEAD".split()
     build_head = subprocess.Popen(
@@ -70,8 +72,8 @@ def fetch_develop():
 
 def get_compare_range():
     """
-    If the current branch is the deploy branch, return a range representing the two parents of the HEAD's merge commit. If not, return a range
-    comparing the current HEAD with the deploy_branch
+    If the current branch is the deploy branch, return a range representing the two parents of the HEAD's merge commit.
+    If not, return a range comparing the current HEAD with the deploy_branch
     """
     current_branch = get_current_branch_name
     deploy_branch = get_deploy_branch
@@ -80,7 +82,6 @@ def get_compare_range():
         range_start = "HEAD^1"  # alias for first parent
         range_end = "HEAD^2"   # alias for second parent
     else:
-        # Not on the deploy branch (e.g. develop)
         # When not on the deploy branch, always compare with the deploy branch
         range_start = "origin/" + get_deploy_branch()
         range_end = "HEAD"
@@ -88,6 +89,10 @@ def get_compare_range():
 
 
 def changed_paths_in_range(compare_range):
+    """
+    Takes the two branches to compare, and returns a list of all files changed between the two SHAs.
+    :param compare_range: List of the start and end SHA to compare
+    """
     cmd = "git diff --name-only --diff-filter=d {}".format(
         compare_range).split()
     paths_run = subprocess.Popen(
@@ -95,10 +100,13 @@ def changed_paths_in_range(compare_range):
     return paths_run.communicate()[0].split("\n")[:-1]
 
 
-def build_docker_cmd(command, owner, tool, version, source="NA"):
+def build_docker_cmd(command, owner, tool, version):
     """
-    Given a docker repo owner, image name, and version, produce an
-    appropriate local docker command
+    Given a docker repo owner, image name, and version, produce an appropriate local docker command.
+    :param command: The specific Git command to produce
+    :param owner: The repo name for the DockerHub that the user is a part of
+    :param tool: The Docker image to be built
+    :param version: The specific version of the Docker image specified by the 'tools' variable
     """
     # Ensure the command is lower-case
     command = command.lower()
@@ -119,21 +127,18 @@ def build_docker_cmd(command, owner, tool, version, source="NA"):
     elif (command == "push"):
         cmd = "docker push {}/{}:{}".format(owner, tool, version)
         return cmd
-    # Generate tag command
-    elif (command == "tag"):
-        cmd = "docker tag {}/{}:{} {}/{}:{}".format(
-            owner, tool, version, owner, tool, source)
-        return cmd
     # If command not recognized, error out
     else:
-        print("Error, command \"{}\" not recognized, please verify it is one of the following: build, images, pull, push, tag\n.".format(command))
+        print("Error, command \"{}\" not recognized, please verify it is one of the following: build, images, pull, push\n.".format(command))
         exit(1)
 
 
 def ensure_local_image(owner, tool, version):
     """
-    Given a docker repo owner, image name, and version, check if it exists
-    locally and pull if necessary
+    Given a docker repo owner, image name, and version, check if it exists locally and pull if necessary.
+    :param owner: The repo name for the DockerHub that the user is a part of
+    :param tool: The Docker image to be built
+    :param version: The specific version of the Docker image specified by the 'tools' variable
     """
     image_cmd = build_docker_cmd("images", owner, tool, version).split()
     image_run = subprocess.Popen(
@@ -151,11 +156,9 @@ def ensure_local_image(owner, tool, version):
 
 def build_images(owner, changed_paths):
     """
-    Given
-    1. a Docker repo owner (e.g. "medforomics") and
-    2. a list of relative changed_paths to Dockerfiles
-    (e.g. "fastqc/0.11.4/Dockerfile bwa/0.7.12/Dockerfile",
-    issue a docker build command and tag any versions with a latest symlink
+    Given a Docker repo owner (e.g. "medforomics") and a list of relative changed_paths to Dockerfiles, execute a Docker 'build' command.
+    :param owner: The repo name for the DockerHub that the user is a part of
+    :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     print("Building changed Dockerfiles...\n")
     attempted_build = 0
@@ -182,10 +185,9 @@ def build_images(owner, changed_paths):
 
 def push_images(owner, changed_paths):
     """
-    Given
-    1. a Docker repo owner (e.g. "medforomics") and
-    2. a list of relative path to Dockerfiles (e.g. "fastqc/0.11.4/Dockerfile bwa/0.7.12/Dockerfile",
-    issue a docker push command for the images built by build_images
+    Given a Docker repo owner and a list of relative path to Dockerfiles, issue a Docker 'push' command for the images built by build_images, as long as it is not prefixed with 'test_'.
+    :param owner: The repo name for the DockerHub that the user is a part of
+    :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     for changed_path in changed_paths:
         if changed_path.count('/') == 2:
@@ -212,13 +214,21 @@ def push_images(owner, changed_paths):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to push")
 
 
-def print_changed(range, changed_paths):
-    print("Changed files between {}:".format(range))
+def print_changed(compare_range, changed_paths):
+    """
+    Prints the list of all changed files found between the range of SHAs given
+    :param compare_range: List of the start and end SHA to compare
+    :param changed_paths: List of all files that had been changed between two Git SHAs
+    """
+    print("Changed files between {}:".format(compare_range))
     for changed_path in changed_paths:
         print(changed_path)
 
 
 def check_org():
+    """
+    Verifies that the user's DOCKERHUB_ORG is setup and has a value
+    """
     if 'DOCKERHUB_ORG' in os.environ:
         print("Using Docker Hub org as {}...".format(
             os.environ.get('DOCKERHUB_ORG')))
@@ -226,3 +236,42 @@ def check_org():
         print("Error: DOCKERHUB_ORG is empty\nPlease ensure DOCKERHUB_ORG is set to the name of the Docker Hub organization.\n")
         exit(1)
     return os.environ.get('DOCKERHUB_ORG')
+
+
+def main():
+    """
+    Main method, takes the command to be run
+    :param command: the command to be run
+    """
+    arglen = len(sys.argv)
+    if arglen < 1:
+        print("Usage python3 scripts/functions.py <command> <list of required variables for the command>")
+        sys.exit(1)
+    else:
+        command = sys.argv[0]
+        if command == 'get_deploy_branch':
+            get_deploy_branch()
+        elif command == 'get_current_branch_name':
+            get_current_branch_name()
+        elif command == 'fetch_develop':
+            fetch_develop()
+        elif command == 'get_compare_range':
+            get_compare_range()
+        elif command == 'changed_paths_in_range':
+            changed_paths_in_range(sys.argv[1])
+        elif command == 'build_docker_cmd':
+            build_docker_cmd(sys.argv[1], sys.argv[2],
+                             sys.argv[3], sys.argv[4])
+        elif command == 'ensure_local_image':
+            ensure_local_image(sys.argv[1], sys.argv[2], sys.argv[3])
+        elif command == 'build_images':
+            build_images(sys.argv[1], sys.argv[2])
+        elif command == 'push_images':
+            push_images(sys.argv[1], sys.argv[2])
+        elif command == 'print_changed':
+            return print_changed(sys.argv[1], sys.argv[2])
+        elif command == 'check_org':
+            return check_org()
+        else:
+            print("ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:\n\
+                ")
