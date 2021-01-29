@@ -250,18 +250,18 @@ def main():
     else:
         command = sys.argv[0]
         if command == 'get_deploy_branch':
-            get_deploy_branch()
+            return get_deploy_branch()
         elif command == 'get_current_branch_name':
-            get_current_branch_name()
+            return get_current_branch_name()
         elif command == 'fetch_develop':
             fetch_develop()
         elif command == 'get_compare_range':
-            get_compare_range()
+            return get_compare_range()
         elif command == 'changed_paths_in_range':
-            changed_paths_in_range(sys.argv[1])
+            return changed_paths_in_range(sys.argv[1])
         elif command == 'build_docker_cmd':
-            build_docker_cmd(sys.argv[1], sys.argv[2],
-                             sys.argv[3], sys.argv[4])
+            return build_docker_cmd(sys.argv[1], sys.argv[2],
+                                    sys.argv[3], sys.argv[4])
         elif command == 'ensure_local_image':
             ensure_local_image(sys.argv[1], sys.argv[2], sys.argv[3])
         elif command == 'build_images':
@@ -273,5 +273,19 @@ def main():
         elif command == 'check_org':
             return check_org()
         else:
-            print("ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:\n\
-                ")
+            print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
+                python -m functions(\'get_deploy_branch\') - Returns the deploy branch ID
+                python -m functions(\'get_current_branch_name\') - Returns the current branch ID
+                python -m functions(\'fetch_develop\') - Runs a \'git fetch\' on the deploy branch ID
+                python -m functions(\'get_compare_range\') - Returns the SHA of the deploy branch and the current branch
+                python -m functions(\'changed_paths_in_range\', [\'SHA1\',\'SHA2\']) - Returns a list of all files that are different between the specified branches
+                python -m functions(\'build_docker_cmd\',\'Docker command (ie build, pull, push)\', \'Dockerhub repository\', \'Base directory for tool\', \
+                    \'Version subdirectory for tool\') - Returns a valid Docker command that you have specified on the tool requested
+                python -m functions(\'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\') \
+                    - Checks whether a specified Docker image exists locally for the specified tool
+                python -m functions(\'build_images\', \'Dockerhub repository\', [\'List of file paths\']) - Checks the list provided for a Dockerfile and builds the associated image
+                python -m functions(\'push_images\', \'Dockerhub repository\', [\'List of file paths\']) - Checks the list provided for a Dockerfile, then pushes the image associated with \
+                    said Dockerfile
+                python -m functions(\'print_changed\', [\'SHA1\', \'SHA2\'], [\'List of files to print\']) - Returns a printed list of all file paths that are different between the specified SHAs
+                python -m functions(\'check_org\') - Returns the currently set Dockerhub repository
+                """.format(command))
