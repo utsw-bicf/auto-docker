@@ -42,32 +42,43 @@ def fetch_develop():
         git_fetch_cmd = "git fetch origin $DEPLOY_BRANCH".split()
         git_checkout_dev_cmd = "git checkout -qf $DEPLOY_BRANCH".split()
         git_checkout_build_cmd = "git checkout {}".format(build_head).split()
-        tmp_code = subprocess.Popen(
+        git_config_proc = subprocess.Popen(
             git_config_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if tmp_code.wait() != 0:
-            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
-                git_config_cmd, tmp_code.communicate()[1]))
+        if git_config_proc.wait() != 0:
+            print("""ERROR: Unable to run git config command:
+                \'{}\'
+                Error Log:
+                {}""".format(git_config_cmd, git_config_proc.communicate()[1]))
             exit(1)
-        tmp_code = subprocess.Popen(
+        git_fetch_proc = subprocess.Popen(
             git_fetch_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if tmp_code.wait() != 0:
-            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
-                git_fetch_cmd, tmp_code.communicate()[1]))
+        if git_fetch_proc.wait() != 0:
+            print("""ERROR: Unable to run git fetch command:
+                \'{}\'
+                Error Log:
+                {}""".format(git_fetch_cmd, git_fetch_proc.communicate()[1]))
             exit(1)
         # create the tracking branch
-        tmp_code = subprocess.Popen(
+        git_checkout_dev_proc = subprocess.Popen(
             git_checkout_dev_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if tmp_code.wait() != 0:
-            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
-                git_checkout_dev_cmd, tmp_code.communicate()[1]))
+        if git_checkout_dev_proc.wait() != 0:
+            print("""ERROR: Unable to run git config command:
+                \'{}\'
+                Error Log:
+                {}""".format(git_checkout_dev_cmd, git_checkout_dev_proc.communicate()[1]))
             exit(1)
         # finally, go back to where we were at the beginning
-        tmp_code = subprocess.Popen(
+        git_checkout_build_proc = subprocess.Popen(
             git_checkout_build_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if tmp_code.wait() != 0:
-            print("ERROR: Unable to run git config command:\n\'{}\'\nError Log:\n{}".format(
-                git_checkout_build_cmd, tmp_code.communicate()[1]))
+        if git_checkout_build_proc.wait() != 0:
+            print("""ERROR: Unable to run git config command:
+                \'{}\'
+                Error Log:
+                {}""".format(git_checkout_build_cmd, git_checkout_build_proc.communicate()[1]))
             exit(1)
+    else:
+        print("Already on deploy branch, exiting.")
+        exit(0)
 
 
 def get_compare_range():
@@ -144,14 +155,18 @@ def ensure_local_image(owner, tool, version):
     image_run = subprocess.Popen(
         image_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     if image_run.communicate()[0] == '':
-        print("Image {}/{}:{} does not exist locally for tagging, pulling...\n".format(owner, tool, version))
+        print("Image {}/{}:{} does not exist locally for tagging, pulling...".format(owner, tool, version))
         build_cmd = build_docker_cmd(
             "build", owner, tool, version).replace('\"', '').split()
         build_run = subprocess.Popen(
             build_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         if build_run.wait() != 0:
-            print("Error: Unable to build image \'{}/{}:{}\'\nError Log:\n{}".format(
-                owner, tool, version, build_run.communicate()[1]))
+            print("""Error: Unable to build image \'{}/{}:{}\'
+                Error Log:
+                {}""".format(owner, tool, version, build_run.communicate()[1]))
+        else:
+            print(
+                "Image \'{}/{}:{}\' successfully built locally!").format(owner, tool, version)
 
 
 def build_images(owner, changed_paths):
@@ -160,27 +175,21 @@ def build_images(owner, changed_paths):
     :param owner: The repo name for the DockerHub that the user is a part of
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
+    dockerfile_path = check_dockerfile_count(changed_paths)
     print("Building changed Dockerfiles...\n")
-    attempted_build = 0
-    # Check for Dockerfile changes first
-    for changed_path in changed_paths:
-        if changed_path.count('/') == 2:
-            tool, version, filename = changed_path.split('/')
-            if (filename.lower() == "dockerfile"):
-                attempted_build = 1
-                print("Building {}/{}:{}...".format(owner, tool, version))
-                build_command = build_docker_cmd(
-                    "build", owner, tool, version).replace('\"', '').split(" ")
-                term = subprocess.Popen(build_command)
-                term_code = term.wait()
-                if term_code == 0:
-                    print("Successfully built {}/{}:{}...".format(owner, tool, version))
-                else:
-                    print("ERROR: Unable to build image \'{}/{}:{}\'\nError Log:\n{}".format(
-                        owner, tool, version, term.communicate()[2]))
-                    exit(1)
-    if (attempted_build == ""):
-        print("No changes to Dockerfiles or latest symlinks detected, nothing to build.\n")
+    tool, version, filename = dockerfile_path.split('/')
+    print("Building {}/{}:{}...".format(owner, tool, version))
+    build_command = build_docker_cmd(
+        "build", owner, tool, version).replace('\"', '').split(" ")
+    build_proc = subprocess.Popen(build_command)
+    build_code = build_proc.wait()
+    if build_code == 0:
+        print("Successfully built {}/{}:{}...".format(owner, tool, version))
+    else:
+        print("""ERROR: Unable to build image \'{}/{}:{}\'
+        Error Log:
+        {}""".format(owner, tool, version, build_proc.communicate()[2]))
+        exit(1)
 
 
 def push_images(owner, changed_paths):
@@ -189,38 +198,39 @@ def push_images(owner, changed_paths):
     :param owner: The repo name for the DockerHub that the user is a part of
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
-    for changed_path in changed_paths:
-        if changed_path.count('/') == 2:
-            tool, version, filename = changed_path.split('/')
-            if filename.lower() == "dockerfile" and tool.split('_')[0] != 'test':
-                attempted_push = "1"
-                print("Pushing {}/{}:{}...".format(owner, tool, version))
-                push_command = build_docker_cmd("push", owner, tool, version).replace(
-                    '\"', '').split(" ")
-                push_command = subprocess.Popen(push_command)
-                push_code = push_command.wait()
-                if push_code == 0:
-                    print(
-                        "Successfully pushed new branch based on {}/{}:{}".format(owner, tool, version))
-                else:
-                    print("ERROR: Image for {}/{}:{} was unable to be pushed, please try again after verifying you have access to {}/{}:{} on DockerHub!".format(
-                        owner, tool, version, owner, tool, version))
-                    exit(1)
-            elif filename.lower() == "dockerfile" and tool.split('_')[0] == 'test':
-                attempted_push = "1"
-                print(
-                    "Test image found: \'{}/{}:{}\'\nSkipping push of test image".format(owner, tool, version))
-    if (attempted_push == ""):
-        print("No changes to Dockerfiles or latest symlinks detected, nothing to push")
+    dockerfile_path = check_dockerfile_count(changed_paths)
+    tool, version, filename = dockerfile_path.split('/')
+    # Verify that this is not a test image
+    if not 'test_' in tool:
+        # Ensure the image exists locally before trying to push
+        ensure_local_image(owner, tool, version)
+        # Once the image is verified, push the image
+        print("Pushing {}/{}:{}...".format(owner, tool, version))
+        push_command = build_docker_cmd("push", owner, tool, version).replace(
+            '\"', '').split(" ")
+        push_command = subprocess.Popen(push_command)
+        push_code = push_command.wait()
+        if push_code == 0:
+            print(
+                "Successfully pushed new branch based on {}/{}:{}".format(owner, tool, version))
+        else:
+            print("""ERROR: Image for {}/{}:{} was unable to be pushed.
+                Please try again after verifying you have access to {}/{}:{} on DockerHub!""".format(
+                owner, tool, version, owner, tool, version))
+            exit(1)
+    elif 'test_' in tool:
+        print("""Test image found: \'{}/{}:{}\'
+            Skipping push of test image""".format(owner, tool, version))
 
 
-def print_changed(compare_range, changed_paths):
+def print_changed(compare_range):
     """
     Prints the list of all changed files found between the range of SHAs given
     :param compare_range: List of the start and end SHA to compare
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     print("Changed files between {}:".format(compare_range))
+    changed_paths = changed_paths_in_range(get_compare_range)
     for changed_path in changed_paths:
         print(changed_path)
 
@@ -238,6 +248,32 @@ def check_org():
     return os.environ.get('DOCKERHUB_ORG')
 
 
+def check_dockerfile_count(changed_paths):
+    """
+    Takes in the list of changed paths and finds the total number of found Dockerfiles
+    :param changed_paths: List of the file paths to be checked for a Dockerfile
+    """
+    # Check for the number of Dockerfiles present in the changed paths
+    dockerfile_count = 0
+    dockerfile_path = ''
+    for changed_path in changed_paths:
+        if '/dockerfile' in changed_paths.lower():
+            dockerfile_count += 1
+            dockerfile_path = changed_path
+    # Fail if there is more than one Dockerfile to be built
+    if dockerfile_count > 1:
+        print("""ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.
+        Currently, you have {} Dockerfile changes posted""".format(dockerfile_count))
+        exit(1)
+    # Error if no changes have been made to any Dockerfiles
+    elif dockerfile_count == 0:
+        print("No changes to Dockerfiles or latest symlinks detected, nothing to build or push.")
+        exit(1)
+    else:
+        print("Dockerfile found: {}".format(dockerfile_path))
+        return dockerfile_path
+
+
 def main():
     """
     Main method, takes the command to be run
@@ -249,43 +285,31 @@ def main():
         sys.exit(1)
     else:
         command = sys.argv[0]
-        if command == 'get_deploy_branch':
-            return get_deploy_branch()
-        elif command == 'get_current_branch_name':
-            return get_current_branch_name()
-        elif command == 'fetch_develop':
+        if command == 'fetch_develop':
             fetch_develop()
-        elif command == 'get_compare_range':
-            return get_compare_range()
-        elif command == 'changed_paths_in_range':
-            return changed_paths_in_range(sys.argv[1])
         elif command == 'build_docker_cmd':
             return build_docker_cmd(sys.argv[1], sys.argv[2],
                                     sys.argv[3], sys.argv[4])
         elif command == 'ensure_local_image':
             ensure_local_image(sys.argv[1], sys.argv[2], sys.argv[3])
         elif command == 'build_images':
-            build_images(sys.argv[1], sys.argv[2])
+            build_images(check_org, changed_paths_in_range(get_compare_range))
         elif command == 'push_images':
-            push_images(sys.argv[1], sys.argv[2])
+            push_images(check_org, changed_paths_in_range(get_compare_range))
         elif command == 'print_changed':
-            return print_changed(sys.argv[1], sys.argv[2])
+            print_changed(get_compare_range())
         elif command == 'check_org':
             return check_org()
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
-                python -m functions(\'get_deploy_branch\') - Returns the deploy branch ID
-                python -m functions(\'get_current_branch_name\') - Returns the current branch ID
-                python -m functions(\'fetch_develop\') - Runs a \'git fetch\' on the deploy branch ID
-                python -m functions(\'get_compare_range\') - Returns the SHA of the deploy branch and the current branch
-                python -m functions(\'changed_paths_in_range\', [\'SHA1\',\'SHA2\']) - Returns a list of all files that are different between the specified branches
+                python -m functions(\'fetch_develop\') - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
                 python -m functions(\'build_docker_cmd\',\'Docker command (ie build, pull, push)\', \'Dockerhub repository\', \'Base directory for tool\', \
                     \'Version subdirectory for tool\') - Returns a valid Docker command that you have specified on the tool requested
                 python -m functions(\'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\') \
                     - Checks whether a specified Docker image exists locally for the specified tool
-                python -m functions(\'build_images\', \'Dockerhub repository\', [\'List of file paths\']) - Checks the list provided for a Dockerfile and builds the associated image
-                python -m functions(\'push_images\', \'Dockerhub repository\', [\'List of file paths\']) - Checks the list provided for a Dockerfile, then pushes the image associated with \
+                python -m functions(\'build_images\') - Checks the list provided for a Dockerfile and builds the associated image
+                python -m functions(\'push_images\') - Checks the list provided for a Dockerfile, then pushes the image associated with \
                     said Dockerfile
-                python -m functions(\'print_changed\', [\'SHA1\', \'SHA2\'], [\'List of files to print\']) - Returns a printed list of all file paths that are different between the specified SHAs
+                python -m functions(\'print_changed\') - Returns a printed list of all file paths that are different between the deploy branch and the current branch.
                 python -m functions(\'check_org\') - Returns the currently set Dockerhub repository
                 """.format(command))
