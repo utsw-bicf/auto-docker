@@ -12,7 +12,7 @@ def get_deploy_branch():
     """
     if 'DEPLOY_BRANCH' in os.environ:
         print("Deploy branch set to {}...".format(
-            os.environ.get('DEPLOY_BRANCH')))
+            os.environ.get('DEPLOY_BRANCH')), file=sys.stderr)
     else:
         print("Error: DEPLOY_BRANCH is empty\nPlease ensure DEPLOY_BRANCH is set to the name of the default branch used for deployment (i.e. 'develop').\n")
         exit(1)
@@ -78,7 +78,7 @@ def fetch_develop():
                 {}""".format(git_checkout_build_cmd, git_checkout_build_proc.communicate()[1]))
             exit(1)
     else:
-        print("Already on deploy branch, exiting.")
+        print("Already on deploy branch, exiting.", file=sys.stderr)
         exit(0)
 
 
@@ -167,7 +167,7 @@ def ensure_local_image(owner, tool, version):
                 {}""".format(owner, tool, version, build_run.communicate()[1]))
         else:
             print(
-                "Image \'{}/{}:{}\' successfully built locally!").format(owner, tool, version)
+                "Image \'{}/{}:{}\' successfully built locally!".format(owner, tool, version), file=sys.stderr)
 
 
 def build_image(owner, changed_paths):
@@ -177,15 +177,15 @@ def build_image(owner, changed_paths):
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     dockerfile_path = check_dockerfile_count(changed_paths)
-    print("Building changed Dockerfiles...\n")
+    print("Building changed Dockerfiles...\n", file=sys.stderr)
     tool, version, filename = dockerfile_path.split('/')
-    print("Building {}/{}:{}...".format(owner, tool, version))
+    print("Building {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
     build_command = build_docker_cmd(
         "build", owner, tool, version).replace('\"', '').split(" ")
     build_proc = subprocess.Popen(build_command)
     build_code = build_proc.wait()
     if build_code == 0:
-        print("Successfully built {}/{}:{}...".format(owner, tool, version))
+        print("Successfully built {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
         return True
     else:
         print("""ERROR: Unable to build image \'{}/{}:{}\'
@@ -207,14 +207,14 @@ def push_images(owner, changed_paths):
         # Ensure the image exists locally before trying to push
         ensure_local_image(owner, tool, version)
         # Once the image is verified, push the image
-        print("Pushing {}/{}:{}...".format(owner, tool, version))
+        print("Pushing {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
         push_command = build_docker_cmd("push", owner, tool, version).replace(
             '\"', '').split(" ")
         push_command = subprocess.Popen(push_command)
         push_code = push_command.wait()
         if push_code == 0:
             print(
-                "Successfully pushed new branch based on {}/{}:{}".format(owner, tool, version))
+                "Successfully pushed new branch based on {}/{}:{}".format(owner, tool, version), file=sys.stderr)
         else:
             print("""ERROR: Image for {}/{}:{} was unable to be pushed.
                 Please try again after verifying you have access to {}/{}:{} on DockerHub!""".format(
@@ -222,7 +222,7 @@ def push_images(owner, changed_paths):
             exit(1)
     elif 'test_' in tool:
         print("""Test image found: \'{}/{}:{}\'
-            Skipping push of test image""".format(owner, tool, version))
+            Skipping push of test image""".format(owner, tool, version), file=sys.stderr)
 
 
 def print_changed(compare_range):
@@ -243,7 +243,7 @@ def check_org():
     """
     if 'DOCKERHUB_ORG' in os.environ:
         print("Using Docker Hub org as {}...".format(
-            os.environ.get('DOCKERHUB_ORG')))
+            os.environ.get('DOCKERHUB_ORG')), file=sys.stderr)
     else:
         print("Error: DOCKERHUB_ORG is empty\nPlease ensure DOCKERHUB_ORG is set to the name of the Docker Hub organization.\n")
         exit(1)
@@ -272,7 +272,8 @@ def check_dockerfile_count(changed_paths):
         print("No changes to Dockerfiles or latest symlinks detected, nothing to build or push.")
         dockerfile_path = '0'
     else:
-        print("Dockerfile found: {}".format(dockerfile_path))
+        print("Dockerfile found: {}".format(dockerfile_path), file=sys.stderr)
+        print(dockerfile_path)
     return dockerfile_path
 
 
