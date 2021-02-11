@@ -40,8 +40,8 @@ def fetch_develop():
         # If branch is not deploy branch (e.g. develop)
         # fetch the current develop branch
         git_config_cmd = "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*;".split()
-        git_fetch_cmd = "git fetch origin {}}".format(deploy_branch).split()
-        git_checkout_dev_cmd = "git checkout -qf {}}".format(deploy_branch).split()
+        git_fetch_cmd = "git fetch origin {}".format(deploy_branch).split()
+        git_checkout_dev_cmd = "git checkout -qf {}".format(deploy_branch).split()
         git_checkout_build_cmd = "git checkout {}".format(build_head).split()
         git_config_proc = subprocess.Popen(
             git_config_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
