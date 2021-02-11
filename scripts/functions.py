@@ -301,16 +301,19 @@ def main():
             print_changed(get_compare_range())
         elif command == 'check_org':
             return check_org()
+        elif command == 'check_dockerfile_count':
+            return check_dockerfile_count(print_changed(get_compare_range()))
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
-                python -m functions(\'fetch_develop\') - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
-                python -m functions(\'build_docker_cmd\',\'Docker command (ie build, pull, push)\', \'Dockerhub repository\', \'Base directory for tool\', \
-                    \'Version subdirectory for tool\') - Returns a valid Docker command that you have specified on the tool requested
-                python -m functions(\'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\') \
+                python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
+                python scripts/functions.py \'build_docker_cmd\',\'Docker command (ie build, pull, push)\', \'Dockerhub repository\', \'Base directory for tool\', \
+                    \'Version subdirectory for tool\' - Returns a valid Docker command that you have specified on the tool requested
+                python scripts/functions.py \'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\' \
                     - Checks whether a specified Docker image exists locally for the specified tool
-                python -m functions(\'build_image\') - Checks the list provided for a Dockerfile and builds the associated image
-                python -m functions(\'push_images\') - Checks the list provided for a Dockerfile, then pushes the image associated with \
+                python scripts/functions.py \'build_image\' - Checks the list provided for a Dockerfile and builds the associated image
+                python scripts/functions.py \'push_images\' - Checks the list provided for a Dockerfile, then pushes the image associated with \
                     said Dockerfile
-                python -m functions(\'print_changed\') - Returns a printed list of all file paths that are different between the deploy branch and the current branch.
-                python -m functions(\'check_org\') - Returns the currently set Dockerhub repository
+                python scripts/functions.py \'print_changed\' - Returns a printed list of all file paths that are different between the deploy branch and the current branch.
+                python scripts/functions.py \'check_org\' - Returns the currently set Dockerhub repository \
+                python scripts/functions.py \'check_dockerfile_count\' - Returns either the Dockerfile path, or a code if either no Dockerfiles fdound (\'0\') or if more than one Dockerfile is found (\'1\')
                 """.format(command))
