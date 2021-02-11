@@ -34,8 +34,8 @@ def fetch_develop():
     get_build_head_cmd = "git rev-parse HEAD".split()
     build_head = subprocess.Popen(
         get_build_head_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).communicate()[0]
-    current_branch = get_current_branch_name
-    deploy_branch = get_deploy_branch
+    current_branch = get_current_branch_name()
+    deploy_branch = get_deploy_branch()
     if (current_branch != deploy_branch):
         # If branch is not deploy branch (e.g. develop)
         # fetch the current develop branch
