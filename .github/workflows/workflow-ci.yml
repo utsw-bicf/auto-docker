@@ -29,7 +29,7 @@ jobs:
           #Check to see if more than one Dockerfile has been updated, and if so, error out.
           docker_file=`python3 scripts/functions.py 'check_dockerfile_count'`
           echo "::set-output name=docker_file::$(echo ${docker_file})"
-          if [ "${docker_file}" == "1" ]
+          if [ "${docker_file}" == "1" ]; then
             exit 1
           elif [ "${docker_file}" == "0" ]; then
             echo "No new images found, running CI only."
