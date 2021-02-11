@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 import subprocess
 
@@ -231,7 +232,7 @@ def print_changed(compare_range):
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     print("Changed files between {}:".format(compare_range))
-    changed_paths = changed_paths_in_range(get_compare_range)
+    changed_paths = changed_paths_in_range(get_compare_range())
     for changed_path in changed_paths:
         print(changed_path)
 
@@ -258,7 +259,7 @@ def check_dockerfile_count(changed_paths):
     dockerfile_count = 0
     dockerfile_path = ''
     for changed_path in changed_paths:
-        if '/dockerfile' in changed_paths.lower():
+        if '/dockerfile' in changed_path.lower():
             dockerfile_count += 1
             dockerfile_path = changed_path
     # Fail if there is more than one Dockerfile to be built
@@ -302,7 +303,7 @@ def main():
         elif command == 'check_org':
             return check_org()
         elif command == 'check_dockerfile_count':
-            return check_dockerfile_count(print_changed(get_compare_range()))
+            return check_dockerfile_count(changed_paths_in_range(get_compare_range()))
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
                 python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
