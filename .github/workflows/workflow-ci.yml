@@ -37,7 +37,7 @@ jobs:
             echo "::set-output name=build::${{ false }}"
           else
             echo "::set-output name=build::${{true}}"
-            echo "New or updated Dockerfile found, building image and running CI"
+            echo -e "New or updated Dockerfile found: "${docker_file}"\nBuilding image and running CI."
             echo "::set-output name=docker_file::$(echo ${docker_file})"
             python3 scripts/check_pre_exist.py main_relation.yml ${docker_file}
             rm main_relation.yml
