@@ -26,6 +26,7 @@ jobs:
           git config user.email github-actions@github.com
           python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
           python3 scripts/functions.py 'fetch_develop'
+          git show origin/main:relations.yaml > main_relation.yml
           #Check to see if more than one Dockerfile has been updated, and if so, error out.
           docker_file=`python3 scripts/functions.py 'check_dockerfile_count'`
           echo "::set-output name=docker_file::$(echo ${docker_file})"
