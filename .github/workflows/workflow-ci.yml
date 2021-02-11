@@ -27,7 +27,7 @@ jobs:
           python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
           python3 scripts/functions.py ('fetch_develop')
           #Check to see if more than one Dockerfile has been updated, and if so, error out.
-          docker_file=`python3 scripts/functions.py('check_dockerfile_count')
+          docker_file=`python3 scripts/functions.py ('check_dockerfile_count')
           echo "::set-output name=docker_file::$(echo ${docker_file})"
           if [ "${docker_file}" == "1" ]
             exit 1
@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "New or updated Dockerfile found, building image and running CI"
           echo ${docker_file}
-          python3 -m scripts/functions.py('build_image')
+          python3 -m scripts/functions.py ('build_image')
 
       - name: Test Image
         id: testImage
