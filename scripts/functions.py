@@ -169,7 +169,7 @@ def ensure_local_image(owner, tool, version):
                 "Image \'{}/{}:{}\' successfully built locally!").format(owner, tool, version)
 
 
-def build_images(owner, changed_paths):
+def build_image(owner, changed_paths):
     """
     Given a Docker repo owner (e.g. "medforomics") and a list of relative changed_paths to Dockerfiles, execute a Docker 'build' command.
     :param owner: The repo name for the DockerHub that the user is a part of
@@ -185,6 +185,7 @@ def build_images(owner, changed_paths):
     build_code = build_proc.wait()
     if build_code == 0:
         print("Successfully built {}/{}:{}...".format(owner, tool, version))
+        return True
     else:
         print("""ERROR: Unable to build image \'{}/{}:{}\'
         Error Log:
@@ -194,7 +195,7 @@ def build_images(owner, changed_paths):
 
 def push_images(owner, changed_paths):
     """
-    Given a Docker repo owner and a list of relative path to Dockerfiles, issue a Docker 'push' command for the images built by build_images, as long as it is not prefixed with 'test_'.
+    Given a Docker repo owner and a list of relative path to Dockerfiles, issue a Docker 'push' command for the images built by build_image, as long as it is not prefixed with 'test_'.
     :param owner: The repo name for the DockerHub that the user is a part of
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
@@ -264,14 +265,14 @@ def check_dockerfile_count(changed_paths):
     if dockerfile_count > 1:
         print("""ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.
         Currently, you have {} Dockerfile changes posted""".format(dockerfile_count))
-        exit(1)
+        dockerfile_path = '1'
     # Error if no changes have been made to any Dockerfiles
     elif dockerfile_count == 0:
         print("No changes to Dockerfiles or latest symlinks detected, nothing to build or push.")
-        exit(1)
+        dockerfile_path = '0'
     else:
         print("Dockerfile found: {}".format(dockerfile_path))
-        return dockerfile_path
+    return dockerfile_path
 
 
 def main():
@@ -292,8 +293,8 @@ def main():
                                     sys.argv[3], sys.argv[4])
         elif command == 'ensure_local_image':
             ensure_local_image(sys.argv[1], sys.argv[2], sys.argv[3])
-        elif command == 'build_images':
-            build_images(check_org, changed_paths_in_range(get_compare_range))
+        elif command == 'build_image':
+            return build_image(check_org, changed_paths_in_range(get_compare_range))
         elif command == 'push_images':
             push_images(check_org, changed_paths_in_range(get_compare_range))
         elif command == 'print_changed':
@@ -307,7 +308,7 @@ def main():
                     \'Version subdirectory for tool\') - Returns a valid Docker command that you have specified on the tool requested
                 python -m functions(\'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\') \
                     - Checks whether a specified Docker image exists locally for the specified tool
-                python -m functions(\'build_images\') - Checks the list provided for a Dockerfile and builds the associated image
+                python -m functions(\'build_image\') - Checks the list provided for a Dockerfile and builds the associated image
                 python -m functions(\'push_images\') - Checks the list provided for a Dockerfile, then pushes the image associated with \
                     said Dockerfile
                 python -m functions(\'print_changed\') - Returns a printed list of all file paths that are different between the deploy branch and the current branch.
