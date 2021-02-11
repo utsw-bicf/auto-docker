@@ -286,14 +286,14 @@ def main():
         print("Usage python3 scripts/functions.py <command> <list of required variables for the command>")
         sys.exit(1)
     else:
-        command = sys.argv[0]
+        command = sys.argv[1]
         if command == 'fetch_develop':
             fetch_develop()
         elif command == 'build_docker_cmd':
-            return build_docker_cmd(sys.argv[1], sys.argv[2],
-                                    sys.argv[3], sys.argv[4])
+            return build_docker_cmd(sys.argv[2], sys.argv[3],
+                                    sys.argv[5], sys.argv[4])
         elif command == 'ensure_local_image':
-            ensure_local_image(sys.argv[1], sys.argv[2], sys.argv[3])
+            ensure_local_image(sys.argv[2], sys.argv[3], sys.argv[4])
         elif command == 'build_image':
             return build_image(check_org, changed_paths_in_range(get_compare_range))
         elif command == 'push_images':
@@ -318,3 +318,8 @@ def main():
                 python scripts/functions.py \'check_org\' - Returns the currently set Dockerhub repository \
                 python scripts/functions.py \'check_dockerfile_count\' - Returns either the Dockerfile path, or a code if either no Dockerfiles fdound (\'0\') or if more than one Dockerfile is found (\'1\')
                 """.format(command))
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
