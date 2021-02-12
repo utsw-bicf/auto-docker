@@ -119,7 +119,7 @@ jobs:
 
       - name: CI Only
         id: runAllCI
-        if: steps.checkBuild.outputs.build == 'false'
+        if: steps.checkBuild.outputs.build == 'false' || steps.testImage.outputs.is_test == 'True'
         env:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
         run: |

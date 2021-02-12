@@ -5,19 +5,12 @@ images:
       - null
       parents:
       - ubuntu:18.04
-  test_base:
-    1.0.0:
-      children:
-      - null
-      parents:
-      - ubuntu:18.04
   ubuntu:
     '18.04':
       children:
-      - test_base:1.0.0
+      - base:1.0.0
       parents: []
 latest:
   base: 1.0.0
-  test_base: 1.0.0
   ubuntu: '18.04'
 terminated: {}
