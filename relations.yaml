@@ -12,5 +12,5 @@ images:
       parents: []
 latest:
   base: 1.0.0
-  ubuntu: '18.04'
+  ubuntu: 18.04
 terminated: {}
