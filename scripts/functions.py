@@ -278,6 +278,15 @@ def check_dockerfile_count(changed_paths):
         print("Dockerfile found: {}".format(dockerfile_path), file=sys.stderr)
     return dockerfile_path
 
+def check_test_image(dockerfile_path):
+    if '/test_' in dockerfile_path.lower():
+        print("Image found is a test image, skipping 'Push to Dockerhub' stage.")
+        return True
+    else:
+        print("Image is not a test image, proceeding to 'Push to Dockerhub' stage.")
+        return False
+
+
 
 def main():
     """
@@ -309,6 +318,8 @@ def main():
         elif command == 'check_dockerfile_count':
             print(check_dockerfile_count(
                 changed_paths_in_range(get_compare_range())))
+        elif command == 'check_test':
+            print(check_test_image(check_dockerfile_count(changed_paths_in_range(get_compare_range()))))
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
                 python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
@@ -321,7 +332,8 @@ def main():
                     said Dockerfile
                 python scripts/functions.py \'print_changed\' - Returns a printed list of all file paths that are different between the deploy branch and the current branch.
                 python scripts/functions.py \'check_org\' - Returns the currently set Dockerhub repository \
-                python scripts/functions.py \'check_dockerfile_count\' - Returns either the Dockerfile path, or a code if either no Dockerfiles fdound (\'0\') or if more than one Dockerfile is found (\'1\')
+                python scripts/functions.py \'check_dockerfile_count\' - Returns either the Dockerfile path, or a code if either no Dockerfiles fdound (\'0\') or if more than one Dockerfile is found (\'1\') \
+                python scripts/functions.py \'check_test\' - Returns whether or not this image is considered a test image (preceeded by \'test_\'), and will build and test, but then skip the push to Dockerhub.
                 """.format(command))
             sys.exit(1)
 
