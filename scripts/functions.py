@@ -273,7 +273,6 @@ def check_dockerfile_count(changed_paths):
         dockerfile_path = '0'
     else:
         print("Dockerfile found: {}".format(dockerfile_path), file=sys.stderr)
-        print(dockerfile_path)
     return dockerfile_path
 
 
@@ -291,20 +290,20 @@ def main():
         if command == 'fetch_develop':
             fetch_develop()
         elif command == 'build_docker_cmd':
-            return build_docker_cmd(sys.argv[2], sys.argv[3],
-                                    sys.argv[5], sys.argv[4])
+            print(build_docker_cmd(sys.argv[2], sys.argv[3],
+                                    sys.argv[5], sys.argv[4]))
         elif command == 'ensure_local_image':
             ensure_local_image(sys.argv[2], sys.argv[3], sys.argv[4])
         elif command == 'build_image':
-            return build_image(check_org, changed_paths_in_range(get_compare_range))
+            print(build_image(check_org, changed_paths_in_range(get_compare_range)))
         elif command == 'push_images':
             push_images(check_org, changed_paths_in_range(get_compare_range))
         elif command == 'print_changed':
             print_changed(get_compare_range())
         elif command == 'check_org':
-            return check_org()
+            print(check_org())
         elif command == 'check_dockerfile_count':
-            return check_dockerfile_count(changed_paths_in_range(get_compare_range()))
+            print(check_dockerfile_count(changed_paths_in_range(get_compare_range())))
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
                 python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
