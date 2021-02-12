@@ -41,7 +41,8 @@ def fetch_develop():
         # fetch the current develop branch
         git_config_cmd = "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*;".split()
         git_fetch_cmd = "git fetch origin {}".format(deploy_branch).split()
-        git_checkout_dev_cmd = "git checkout -qf {}".format(deploy_branch).split()
+        git_checkout_dev_cmd = "git checkout -qf {}".format(
+            deploy_branch).split()
         git_checkout_build_cmd = "git checkout {}".format(build_head).split()
         git_config_proc = subprocess.Popen(
             git_config_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -177,6 +178,7 @@ def build_image(owner, changed_paths):
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     dockerfile_path = check_dockerfile_count(changed_paths)
+    print(dockerfile_path)
     print("Building changed Dockerfiles...\n", file=sys.stderr)
     tool, version, filename = dockerfile_path.split('/')
     print("Building {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
@@ -185,7 +187,8 @@ def build_image(owner, changed_paths):
     build_proc = subprocess.Popen(build_command)
     build_code = build_proc.wait()
     if build_code == 0:
-        print("Successfully built {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
+        print("Successfully built {}/{}:{}...".format(owner,
+                                                      tool, version), file=sys.stderr)
         return True
     else:
         print("""ERROR: Unable to build image \'{}/{}:{}\'
@@ -291,19 +294,21 @@ def main():
             fetch_develop()
         elif command == 'build_docker_cmd':
             print(build_docker_cmd(sys.argv[2], sys.argv[3],
-                                    sys.argv[5], sys.argv[4]))
+                                   sys.argv[5], sys.argv[4]))
         elif command == 'ensure_local_image':
             ensure_local_image(sys.argv[2], sys.argv[3], sys.argv[4])
         elif command == 'build_image':
-            print(build_image(check_org, changed_paths_in_range(get_compare_range)))
+            print(build_image(check_org(), changed_paths_in_range(get_compare_range())))
         elif command == 'push_images':
-            push_images(check_org, changed_paths_in_range(get_compare_range))
+            push_images(check_org(), changed_paths_in_range(
+                get_compare_range()))
         elif command == 'print_changed':
             print_changed(get_compare_range())
         elif command == 'check_org':
             print(check_org())
         elif command == 'check_dockerfile_count':
-            print(check_dockerfile_count(changed_paths_in_range(get_compare_range())))
+            print(check_dockerfile_count(
+                changed_paths_in_range(get_compare_range())))
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
                 python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
