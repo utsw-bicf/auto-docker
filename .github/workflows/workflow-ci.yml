@@ -69,7 +69,7 @@ jobs:
 
       - name: Update relations.yaml
         id: updateYaml
-        if: steps\.testImage\.outputs\.is_test == 'false'
+        if: steps.testImage.outputs.is_test == 'false'
         env:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
@@ -87,7 +87,7 @@ jobs:
 
       - name: Commit New Relations
         id: commitNewRelations
-        if: steps\.testImage\.outputs\.is_test == 'false'
+        if: steps.testImage.outputs.is_test == 'false'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -97,7 +97,7 @@ jobs:
 
       - name: Push New Relations
         id: pushNewRelations
-        if: steps\.testImage\.outputs\.is_test == 'false'
+        if: steps.testImage.outputs.is_test == 'false'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -105,7 +105,7 @@ jobs:
 
       - name: DockerHub_Login
         id: dockerHubLogin
-        if: steps\.testImage\.outputs\.is_test == 'false'
+        if: steps.testImage.outputs.is_test == 'false'
         uses: actions-hub/docker/login@master
         env:
           DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
@@ -113,7 +113,7 @@ jobs:
 
       - name: Push_to_DockerHub
         id: pushToDockerHub
-        if: steps\.testImage\.outputs\.is_test == 'false'
+        if: steps.testImage.outputs.is_test == 'false'
         uses: actions-hub/docker@master
         with:
           args: push ${DOCKER_IMAGE}
