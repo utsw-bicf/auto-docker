@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "New or updated Dockerfile found, building image and running CI"
           echo ${docker_file}
-          python3 -m scripts/functions.py 'build_image'
+          python3 scripts/functions.py 'build_image'
 
       - name: Test Image
         id: testImage
