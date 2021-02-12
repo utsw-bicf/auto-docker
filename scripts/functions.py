@@ -319,8 +319,7 @@ def main():
             print(check_dockerfile_count(
                 changed_paths_in_range(get_compare_range())))
         elif command == 'check_test':
-            print(check_test_image(check_dockerfile_count(
-                changed_paths_in_range(get_compare_range()))))
+            print(check_test_image(sys.argv[2]))
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
                 python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
@@ -334,7 +333,7 @@ def main():
                 python scripts/functions.py \'print_changed\' - Returns a printed list of all file paths that are different between the deploy branch and the current branch.
                 python scripts/functions.py \'check_org\' - Returns the currently set Dockerhub repository \
                 python scripts/functions.py \'check_dockerfile_count\' - Returns either the Dockerfile path, or a code if either no Dockerfiles fdound (\'0\') or if more than one Dockerfile is found (\'1\') \
-                python scripts/functions.py \'check_test\' - Returns whether or not this image is considered a test image (preceeded by \'test_\'), and will build and test, but then skip the push to Dockerhub.
+                python scripts/functions.py \'check_test\' \'Dockerfile path\'- Returns whether or not this image is considered a test image (preceeded by \'test_\'), and will build and test, but then skip the push to Dockerhub.
                 """.format(command))
             sys.exit(1)
 

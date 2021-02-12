@@ -7,7 +7,7 @@ jobs:
     outputs:
       build: ${{ false }}
       docker_file: ""
-      is_test: 'True'
+      is_test: "True"
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -59,11 +59,12 @@ jobs:
         id: testImage
         if: steps.checkBuild.outputs.build == 'true'
         env:
+          DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
           python3 tests/imagecheck.py "${DOCKERHUB_ORG}" ${docker_file}
-          echo "::set-output name=is_test::$(python3 scripts/functions.py 'check_test')"
+          echo "::set-output name=is_test::$(python3 scripts/functions.py 'check_test' ${docker_file})"
 
       - name: Update relations.yaml
         id: updateYaml
