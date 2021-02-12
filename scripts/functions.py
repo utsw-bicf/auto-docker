@@ -280,7 +280,7 @@ def check_dockerfile_count(changed_paths):
 
 
 def check_test_image(dockerfile_path):
-    if 'test_' in dockerfile_path.lower():
+    if "^test_" in dockerfile_path.lower():
         print("Image found is a test image, skipping 'Push to Dockerhub' stage.", file=sys.stderr)
         return True
     else:
