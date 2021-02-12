@@ -4,8 +4,8 @@ Lightweight version of our automated Docker image builder
 
 ## Setup
 
-1. Fork this repository from the master branch, and rename it to suite your needs
-2. Setup the following secrets:
+1. Fork this repository from the master branch using the "User this Template" button, and rename it to suite your needs
+2. Setup the following repository secrets:
 
 * **DEPLOY_BRANCH**: This should be set to something other than ***master*** or ***main***.  We use ***develop***
 
@@ -22,14 +22,20 @@ We recommend having a user account that is now owned by any individual for pushi
 
 * **DOCKERHUB_UN**: Again, the username associated with the above organization and password.
 
-3. Change the name of the base image to suite your needs.  So, since we are the bicf, we call ours *bicfbase*.  You will need to do this in the main directory, as well as in the *relations.yaml* file.
+3. While in the ***main*** branch, copy the *base* image directory (do not delete for now), or create your own using the existing *base* as a template, to create a new directory with a name you want for your base.  Note that it must have a Dockerfile and a *unittest.yml* file with at least one test in it.  So, since we are the bicf, we copied ours as *bicfbase*.  Commit, push, and re-pull your ***main*** branch.
 
-That should be it, you're all set.
+4. Remove the pre-existing ***base*** directory, and then remove it from the ***relations.yaml*** file.  Commit, and push.  The CI will fail, but that can be ignored at this step.
+
+5. Pull ***main*** one last time, and then merge ***main*** into **DEPLOY_BRANCH**.
+
+That should be it, you're all set.  Feel free to change this readme or any of the files as you see fit.
   
 
 ## Using this suite
 
-This suite is setup assuming that all of your images have the base image as their ultimate parent.  This image is built off the publically available Ubuntu 18.04 image, with some common tools such as *git*, *parallel*, *pbzip2* and others installed.  It is meant to be fairly light-weight.  Using the *relations.yaml* file, it is very easy to keep track of what images are built on top of other images.
+This suite is setup assuming that all of your images have the base image you setup as their ultimate parent.  The existing *base* image is built off the publically available Ubuntu 18.04 image, with some common tools such as *git*, *parallel*, *pbzip2* and others installed, and is meant to be fairly light-weight.  While you are not constrained to use this by any means, it is advised to do something similar, as it will lock down the tools used in one image, instead of having to download it every time.
+
+The *relations.yaml* is not really for users, under ideal conditions.  About the only time it should be used is if you want to mark an image as "terminated", meaning that it should no longer receive any updates, and if you update any children, it will not create a new issue.  Within the auto-builder, *relations.yaml* is meant to be used as both a version list, and a quick reference guide for which images are built on top of which other images, so that if you update an image, it will create an issue to update any child images as well, unless, as previously said, you have edited *relations.yaml* to mark that image as "terminated".
 
 Every new image is setup with the following:
 
@@ -60,7 +66,7 @@ commands:
 
 Any additional files required for installation may be placed here as well, such as any scripting files required by the image.  Be aware, these folders are available to anyone that you grant permissions to access this repository, so placing user names and passwords is not advised.
 
-There should be three branches of this repository at any given time, we will call them ***main***, ***develop***, and ***issue***.
+There should be two branches of this repository at any given time, we will call them ***main***, ***develop***, and possibly a third branch if you are developing a new image, which we will call ***image***, though the name is up to you.  We generally follow a naming convention of *programName_versionID*, though in theory it could be named anything other than what you have named your ***main*** and ***develop*** branches, so long as it is a GitHub-allowed branch name.
 
 ### Main
 
@@ -72,30 +78,30 @@ At this branch, images are available for public (or at least organizational) use
 
 This is kind of like an extended beta test, and it is your last chance to make any changes or rebuild images before they are pushed to main and locked down.
 
-### Issue
+### Image
 
-This branch is the most maliable, and it is also the only branch where there should exist more than one; specifically one per image created/in development.  Each issue can have only __***ONE***__ modified Dockerfile, so if you need to modify more than one Dockerfile, you must create two entries in this branch.
+This branch is the most maliable, and ideally, there should be one per image created/in development.  Each branch can have only __***ONE***__ modified Dockerfile, so if you need to modify more than one Dockerfile, you must create two branches.
 
 The thought process for this branch is that these images are still in testing by the creator, and so are not meant for anyone else's use.
 
 ### Creating a new image
 
-1. When a user wants to create a new image, first they should create an issue requesting this new image.  What is in this issue is up to the manager of the fork, however, it is recommended that they list out the following:
+1. When a user wants to create a new image, first they should create an issue requesting this new image.  While this is not necessary, we have found it useful for tracking purposes, but if you are so inclined, you can skip this step.  What is in this issue is up to the manager of the fork, however, it is recommended that they list out the following:
 
 * The programs and associated version numbers required for this image
 * The URLs for any installation instructions and downloads
 * Any time crunch considerations
 * What programs would be tested for validation, and how they should be verified (we mostly use a simple version verification)
 
-2. From there, it is up to those who are maintaining the repository to figure out which images should be used as a parent image, and create a new branch, tied to the issue.
+2. Create a new branch for this image.  If your system supports it, you can tie the branch to the issue.
 
-3. On this branch, write the new Docker recipe along with any tests that are required to ensure functionality.  Note that with the checks, it is recommended that you only test the first line or two, or however much is required to get a version number, __***and***__ URLs tend to not work very well, and can cause testing failures.
+3. On this branch, write the new Docker recipe along with any tests that are required to ensure functionality.  Note that with the checks, it is recommended that you only test the first line or two, or however much is required to get a version number, __***and***__ URLs tend to not work very well, and can cause testing failures.  It is also advised, though not required, that you prefix the new image's base directory with "test_" (i.e. "test_base/1.0.0"), as this will prevent the system from pushing to your DockerHub account, and updating *relations.yaml* until you are ready.  Once you are comfortable that the image is roughly where you are ready to have it up on DockerHub, remove the "test_" prefix from the new image's base directory.
 
-4. Once the branch is pushed, the image will be built, and the tests specified will be run on it.
+4. Once the branch is pushed to GitHub, the image will be built, and the tests specified will be run on it.
 
-5. Assuming that the build is successfull and the test run without issue, the new image will be pushed to the container repository specified by the above secrets.
+5. Assuming that the build is successfull, the test run without issue, and there is no "test_" prefix,the new image will be pushed to the container repository specified by the above secrets.
 
-6. Within the issue branch, a new *relations.yaml* file is created, which takes the current *relations.yaml* from the *develop* branch, and updates it with the new Dockerfile information.  Once it is pushed to ***develop***.
+6. Within the issue branch, a new *relations.yaml* file is created, which takes the current *relations.yaml* from the *develop* branch, and updates it with the new Dockerfile information.  The CI run on any commit without the previously mentioned "test_" prefix will create a new commit to this branch, which means that if the commit was successful, you will need to pull this branch again.
 
 7. Once the image is tested to the satisfaction of both the image creator and the curator of this repository, the ***issue*** can then be merged into ***develop*** and closed.  At a point of the curator's discression, all images in ***develop*** may be merged into ***main***.
 
