@@ -109,7 +109,13 @@ The thought process for this branch is that these images are still in testing by
 
 This process is funcitonally very similar to the creation of a new image, in that you still want to create an issue with the same information, however, this time, after the new image is pushed, it adds a new step which checks the *relation.yaml* file for any child images, and it automatically creates additional issues for updating these child images, to keep them current with any changes to the parents.
 
-There is a section in the **relations.yaml** called "terminated".  This section is special, and should only be updated on the ***develop*** branch.  This section is reserved for images that are no longer to be updated whenever a parent image is updated (for example, if there are licensing issues, or logins that make an automated build impossible).
+### Terminating an image
+
+There is a section in the **relations.yaml** called "terminated".  This section is special, and should only be updated on the ***develop*** branch.  This is a process whereby the curator can mark an image as no longer requiring nor having eligibility for updating.  Marking an image as such should only be done by the curator, and only in the ***develop*** branch.
+
+Marking an image as *terminated* in the **relations.yaml** file means that whenever new images are built, and the system runs its checks on parent and child images for updating, the image will be ignored.  In short, it will not receive update requests like other images do when their parent images are updated.  some use-cases for this would be if there are licensing issues, or logins that make an automated build impossible.
+
+The images and Dockerfiles are not deleted, they will remain in the repositories where they are stored.
 
 ### Non-Dockerfile related changes
 
