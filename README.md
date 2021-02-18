@@ -4,10 +4,10 @@ Lightweight version of our automated Docker image builder
 
 ## Setup
 
-1. Fork this repository from the master branch using the "User this Template" button, and rename it to suite your needs
+1. Fork this repository from the master branch using the "Use this Template" button, and rename it to suite your needs.  Make sure to select the *Include all branches* button if you want to have it pre-set like we have it, otherwise you will need to create the branches yourself.
 2. Setup the following repository secrets:
 
-* **DEPLOY_BRANCH**: This should be set to something other than ***master*** or ***main***.  We use ***develop***
+* **DEPLOY_BRANCH**: This should be set to something other than ***master*** or ***main***.  We use ***develop***, but the key is that this is branch created directly off of ***main***, and will function as the only branch to be merged into ***main*** directly.
 
 * **DOCKERHUB_ORG** The default Docker Hub organization name.  If you don't want to use the default Dockerhub, this is where you can change it to either Azure or AWS container registries, otherwise just use your dafult Dockerhub ID.  This is the first part of your *docker push* command, before the first slash:
 
@@ -86,14 +86,14 @@ The thought process for this branch is that these images are still in testing by
 
 ### Creating a new image
 
-1. When a user wants to create a new image, first they should create an issue requesting this new image.  While this is not necessary, we have found it useful for tracking purposes, but if you are so inclined, you can skip this step.  What is in this issue is up to the manager of the fork, however, it is recommended that they list out the following:
+1. When a user wants to create a new image, first they should create an issue requesting this new image.  While this is not strictly necessary, we have found it useful for tracking purposes, but if you are so inclined, you can skip this step.  What is in this issue is up to the manager of the fork, however, it is recommended that they list out the following:
 
 * The programs and associated version numbers required for this image
 * The URLs for any installation instructions and downloads
 * Any time crunch considerations
 * What programs would be tested for validation, and how they should be verified (we mostly use a simple version verification)
 
-2. Create a new branch for this image.  If your system supports it, you can tie the branch to the issue.
+2. Create a new branch for this image.  If your system supports it (i.e. GitLab), you can tie the branch to the issue.
 
 3. On this branch, write the new Docker recipe along with any tests that are required to ensure functionality.  Note that with the checks, it is recommended that you only test the first line or two, or however much is required to get a version number, __***and***__ URLs tend to not work very well, and can cause testing failures.  It is also advised, though not required, that you prefix the new image's base directory with "test_" (i.e. "test_base/1.0.0"), as this will prevent the system from pushing to your DockerHub account, and updating *relations.yaml* until you are ready.  Once you are comfortable that the image is roughly where you are ready to have it up on DockerHub, remove the "test_" prefix from the new image's base directory.
 
@@ -101,9 +101,9 @@ The thought process for this branch is that these images are still in testing by
 
 5. Assuming that the build is successfull, the test run without issue, and there is no "test_" prefix,the new image will be pushed to the container repository specified by the above secrets.
 
-6. Within the issue branch, a new *relations.yaml* file is created, which takes the current *relations.yaml* from the *develop* branch, and updates it with the new Dockerfile information.  The CI run on any commit without the previously mentioned "test_" prefix will create a new commit to this branch, which means that if the commit was successful, you will need to pull this branch again.
+6. Within the branch, a new *relations.yaml* file is created, which takes the current *relations.yaml* from the *develop* branch, and updates it with the new Dockerfile information.  The CI run on any commit without the previously mentioned "test_" prefix will create a new commit to this branch, which means that if the commit was successful, you will need to pull this branch again.
 
-7. Once the image is tested to the satisfaction of both the image creator and the curator of this repository, the ***issue*** can then be merged into ***develop*** and closed.  At a point of the curator's discression, all images in ***develop*** may be merged into ***main***.
+7. Once the image is tested to the satisfaction of both the image creator and the curator of this repository, the branch can then be merged into ***develop*** and the issue, if created, closed.  At a point of the curator's discression, all images in ***develop*** may be merged into ***main***.
 
 ### Updating a specific image
 
