@@ -169,6 +169,9 @@ def ensure_local_image(owner, tool, version):
         else:
             print(
                 "Image \'{}/{}:{}\' successfully built locally!".format(owner, tool, version), file=sys.stderr)
+    else:
+        print(
+            "Image \'{}/{}:{}\' already exists locally!".format(owner, tool, version), file=sys.stderr)
 
 
 def build_image(owner, changed_paths):

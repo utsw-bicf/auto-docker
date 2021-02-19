@@ -12,20 +12,20 @@ test_output_path = os.path.dirname(os.path.abspath(__file__)) + '/../'
 test_vars = []
 
 
-@pytest.mark.test_organization
-def test_org():
+@pytest.mark.test_check_org
+def test_check_org():
     test_vars.append(functions.check_org())
     assert test_vars[0] == "bicf"
 
 
-@pytest.mark.test_deploy_branch
-def test_deploy_branch():
+@pytest.mark.test_get_deploy_branch
+def test_get_deploy_branch():
     test_vars.append(functions.get_deploy_branch())
     assert test_vars[1] == 'develop'
 
 
-@pytest.mark.test_compare_range
-def test_compare_range():
+@pytest.mark.test_get_compare_range
+def test_get_compare_range():
     test_vars.append(functions.get_compare_range())
     assert test_vars[2] == 'origin/develop HEAD'
 
