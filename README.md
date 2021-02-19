@@ -68,6 +68,3 @@ UT Southwestern Medical Center\
 
 
 Please cite in publications: Pipeline was developed by BICF from funding provided by **Cancer Prevention and Research Institute of Texas (RP150596)**.
-
-<hr>
-<hr>
