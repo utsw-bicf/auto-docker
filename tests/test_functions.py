@@ -96,5 +96,5 @@ def test_check_dockerfile_count(capfd):
 
 @pytest.mark.test_check_test_image
 def test_check_test_image():
-    temp_var = functions.check_test_image(test_vars[3])
+    temp_var = functions.check_test_image(test_vars[3][6])
     assert temp_var == True
