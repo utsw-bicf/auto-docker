@@ -1,0 +1,7 @@
+name: Image building and testing CI
+
+on: [push]
+
+jobs:
+  validate:
+    runs-on: ubuntu-18.04
