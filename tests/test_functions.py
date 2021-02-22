@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import sys
 import os
 import pytest
@@ -12,22 +13,22 @@ if not 'DEPLOY_BRANCH' in os.environ:
     os.environ['DEPLOY_BRANCH'] = 'test_branch'
 if not 'DOCKERHUB_ORG' in os.environ:
     os.environ['DOCKERHUB_ORG'] = 'test_org'
-no_image = False
-dockerfile_path = ''
 
+no_image = False
 test_vars = []
+tools = []
 
 
 @pytest.mark.test_check_org
 def test_check_org():
     test_vars.append(functions.check_org())
-    assert test_vars[0] != ''
+    assert test_vars[0] == os.environ['DOCKERHUB_ORG']
 
 
 @pytest.mark.test_get_deploy_branch
 def test_get_deploy_branch():
     test_vars.append(functions.get_deploy_branch())
-    assert test_vars[1] != ''
+    assert test_vars[1] == os.environ['DEPLOY_BRANCH']
 
 
 @pytest.mark.test_get_compare_range
@@ -39,7 +40,6 @@ def test_get_compare_range():
 @pytest.mark.test_changed_paths_in_range
 def test_changed_paths_in_range():
     global no_image
-    global dockerfile_path    
     test_vars.append(functions.changed_paths_in_range(test_vars[2]))
     for changed_path in test_vars[3]:
         if '/dockerfile' in changed_path.lower():
@@ -50,6 +50,7 @@ def test_changed_paths_in_range():
             no_image = True
     if no_image == True:
         os.makedirs('testing_base_image/0.0.1')
+        test_vars.append('testing_base_image/0.0.1/Dockerfile')
         with open('testing_base_image/0.0.1/Dockerfile', 'w') as f:
             print("FROM ubuntu:18.04 \
                     ENV DEBIAN_FRONTEND=noninteractive \
@@ -65,12 +66,11 @@ def test_changed_paths_in_range():
                     ENV LC_ALL=C.UTF-8 \
                     ENV LANG=C.UTF-8 \
                     VOLUME /var/tmp/results \
-                    VOLUME /var/tmp/data)")
-        test_vars[4] = 'testing_base_image/0.0.1/Dockerfile'
+                    VOLUME /var/tmp/data")
+        f.close()
         assert no_image == True
     else:
-        print(dockerfile_path)
-        assert test_vars[3] != None
+        assert len(test_vars) >= 5
 
 
 @pytest.mark.test_print_changed
@@ -99,10 +99,8 @@ def build_docker_cmd(capfd):
 
 @pytest.mark.test_ensure_local_image
 def test_ensure_local_image(capfd):
-    global dockerfile_path
-    print(dockerfile_path)
-    tool_name = dockerfile_path.split('/')[0]
-    tool_version = dockerfile_path.split('/')[1]
+    tool_name = test_vars[4].split('/')[0]
+    tool_version = test_vars[4].split('/')[1]
     functions.ensure_local_image(test_vars[0], tool_name, tool_version)
     test_out, test_err = capfd.readouterr()
     print(test_out)
