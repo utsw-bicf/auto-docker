@@ -157,7 +157,7 @@ def ensure_local_image(owner, tool, version):
     image_run = subprocess.Popen(
         image_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     if image_run.communicate()[0] == '':
-        print("Image {}/{}:{} does not exist locally for tagging, pulling...".format(owner, tool, version))
+        print("Image {}/{}:{} does not exist locally for tagging, building...".format(owner, tool, version))
         build_cmd = build_docker_cmd(
             "build", owner, tool, version).replace('\"', '').split()
         build_run = subprocess.Popen(

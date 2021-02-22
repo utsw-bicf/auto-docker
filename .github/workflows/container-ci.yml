@@ -1,4 +1,4 @@
-name: Standard Workflow CI
+name: Image building and testing CI
 
 on: [push]
 
