@@ -87,7 +87,7 @@ def test_ensure_local_image(capfd):
     tool_version = test_vars[4].split('/')[1]
     functions.ensure_local_image(test_vars[0], tool_name, tool_version)
     test_out, test_err = capfd.readouterr()
-    assert "Image \'{}/{}:{}\' already exists locally!\n".format(
+    assert "Image \'{}/{}:{}\' successfully built locally!\n".format(
         test_vars[0], tool_name, tool_version) in test_err
 
 
