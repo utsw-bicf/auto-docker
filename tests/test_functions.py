@@ -9,24 +9,22 @@ sys.path.append(os.path.abspath('scripts/'))
 import functions
 
 test_output_path = os.path.dirname(os.path.abspath(__file__)) + '/../'
-if not 'DEPLOY_BRANCH' in os.environ:
-    os.environ['DEPLOY_BRANCH'] = 'test_branch'
-if not 'DOCKERHUB_ORG' in os.environ:
-    os.environ['DOCKERHUB_ORG'] = 'test_org'
-
-no_image = False
+no_image = True
 test_vars = []
-tools = []
 
 
 @pytest.mark.test_check_org
 def test_check_org():
+    if os.environ['DOCKERHUB_ORG'] == '':
+        os.environ['DOCKERHUB_ORG'] = 'test_org'
     test_vars.append(functions.check_org())
     assert test_vars[0] == os.environ['DOCKERHUB_ORG']
 
 
 @pytest.mark.test_get_deploy_branch
 def test_get_deploy_branch():
+    if os.environ['DEPLOY_BRANCH'] == '':
+        os.environ['DEPLOY_BRANCH'] = 'test_branch'
     test_vars.append(functions.get_deploy_branch())
     assert test_vars[1] == os.environ['DEPLOY_BRANCH']
 
@@ -34,13 +32,20 @@ def test_get_deploy_branch():
 @pytest.mark.test_get_compare_range
 def test_get_compare_range():
     test_vars.append(functions.get_compare_range())
-    assert test_vars[2] != ''
+    assert "origin/{} ".format(test_vars[1]) in test_vars[2]
 
 
 @pytest.mark.test_changed_paths_in_range
 def test_changed_paths_in_range():
     global no_image
     test_vars.append(functions.changed_paths_in_range(test_vars[2]))
+    test_vars.append('testing_base_image/0.0.1/Dockerfile')
+    test_vars.append('test_testing_base_image/0.0.1/Dockerfile')
+    os.makedirs('testing_base_image/0.0.1')
+    with open(test_vars[4], 'w') as f:
+        f.write(
+            "FROM ubuntu:18.04\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update -y --fix-missing")
+    f.close()
     for changed_path in test_vars[3]:
         if '/dockerfile' in changed_path.lower():
             test_vars.append(str(changed_path))
@@ -49,39 +54,18 @@ def test_changed_paths_in_range():
         else:
             no_image = True
     if no_image == True:
-        os.makedirs('testing_base_image/0.0.1')
-        test_vars.append('testing_base_image/0.0.1/Dockerfile')
-        with open('testing_base_image/0.0.1/Dockerfile', 'w') as f:
-            print("FROM ubuntu:18.04 \
-                    ENV DEBIAN_FRONTEND=noninteractive \
-                    RUN apt-get update -y --fix-missing && \\\
-                    apt-get upgrade -y && \\\
-                    apt-get dist-upgrade -y && \\\
-                    apt-get autoremove -y && \\\
-                    apt-get update -y --fix-missing && \\\
-                    apt-get upgrade -y \
-                    RUN locale \
-                    RUN apt-get install -y gcc g++ apt-utils wget gzip pigz pbzip2 zip software-properties-common make parallel pandoc git \
-                    RUN while parallel --citation; do echo \"will cite\"; done \
-                    ENV LC_ALL=C.UTF-8 \
-                    ENV LANG=C.UTF-8 \
-                    VOLUME /var/tmp/results \
-                    VOLUME /var/tmp/data")
-        f.close()
-        assert no_image == True
-    else:
-        assert len(test_vars) >= 5
+        assert test_vars[3] == "No changed paths found."
+        test_vars[3] = [test_vars[4], test_vars[5]]
+        test_vars.append(test_vars[4])
+    assert len(test_vars[3]) != 0
 
 
 @pytest.mark.test_print_changed
 def test_print_changed(capfd):
-    if no_image == True:
-        assert True
-    else:
-        functions.print_changed(test_vars[2])
-        test_out, test_err = capfd.readouterr()
-        print(test_err)
-        assert test_out != None
+    functions.print_changed(test_vars[3])
+    test_out, test_err = capfd.readouterr()
+    print(test_err)
+    assert test_vars[6] in test_out
 
 
 @pytest.mark.test_build_docker_cmd
@@ -103,41 +87,71 @@ def test_ensure_local_image(capfd):
     tool_version = test_vars[4].split('/')[1]
     functions.ensure_local_image(test_vars[0], tool_name, tool_version)
     test_out, test_err = capfd.readouterr()
-    print(test_out)
-    assert ("Image \'{}/{}:{}\' already exists locally!".format(test_vars[0], tool_name, tool_version) in test_err) or (
-        "Image {}/{}:{} does not exist locally for tagging, building..." in test_out)
+    assert "Image \'{}/{}:{}\' already exists locally!\n".format(test_vars[0], tool_name, tool_version) in test_err
 
 
 @pytest.mark.test_build_image
 def test_build_image(capfd):
-    temp_var = functions.build_image(test_vars[0], test_vars[3])
+    tool_name = test_vars[4].split('/')[0]
+    tool_version = test_vars[4].split('/')[1]
+    test_tool_name = test_vars[5].split('/')[0]
+    test_tool_version = test_vars[5].split('/')[1]
+    temp_var = functions.build_image(test_vars[0], [test_vars[4]])
     test_out, test_err = capfd.readouterr()
-    print(test_out)
-    assert "Dockerfile found: test_base/1.0.0/Dockerfile\nBuilding changed Dockerfiles...\n\nBuilding bicf/test_base:1.0.0...\nSuccessfully built bicf/test_base:1.0.0...\n" in test_err
-    assert temp_var == True
-    run_command = "docker image ls | grep 'bicf/test_base' | grep '1.0.0' | wc -l"
+    assert "Dockerfile found: {}\nBuilding changed Dockerfiles...\n\nBuilding {}/{}:{}...\nSuccessfully built {}/{}:{}...\n".format(
+        test_vars[4], test_vars[0], tool_name, tool_version, test_vars[0], tool_name, tool_version) in test_err
+    run_command = "docker image ls | grep '{}/{}' | grep '{}' | wc -l".format(
+        test_vars[0], tool_name, tool_version)
     os.system(run_command)
     test_out, test_err = capfd.readouterr()
-    assert "\n1" in test_out
+    assert "1" in test_out
+    assert temp_var == True
+    temp_var = functions.build_image(test_vars[0], [test_vars[5]])
+    test_out, test_err = capfd.readouterr()
+    assert "ERROR: Unable to build image \'{}/{}:{}\'".format(
+        test_vars[0], test_tool_name, test_tool_version) in test_out
+    assert temp_var == None
 
 
 @pytest.mark.test_push_images
 def test_push_images(capfd):
-    functions.push_images(test_vars[0], test_vars[3])
+    tool_name = test_vars[4].split('/')[0]
+    tool_version = test_vars[4].split('/')[1]
+    test_tool_name = test_vars[5].split('/')[0]
+    test_tool_version = test_vars[5].split('/')[1]
+    functions.push_images(test_vars[0], [test_vars[4]])
     test_out, test_err = capfd.readouterr()
-    print(test_out)
-    assert "Dockerfile found: test_base/1.0.0/Dockerfile\nTest image found: 'bicf/test_base:1.0.0'\n            Skipping push of test image\n" in test_err
+    assert "\nPushing {}/{}:{}...\n".format(
+        test_vars[0], tool_name, tool_version) in test_err
+    functions.push_images(test_vars[0], [test_vars[5]])
+    test_out, test_err = capfd.readouterr()
+    assert "\nTest image found: \'{}/{}:{}\'\n".format(
+        test_vars[0], test_tool_name, test_tool_version) in test_err
 
 
 @pytest.mark.test_check_dockerfile_count
 def test_check_dockerfile_count(capfd):
-    test_vars.append(functions.check_dockerfile_count(test_vars[3]))
+    temp_var = functions.check_dockerfile_count([test_vars[4]])
     test_out, test_err = capfd.readouterr()
-    assert "Dockerfile found: test_base/1.0.0/Dockerfile" in test_err
-    assert test_vars[4] == "test_base/1.0.0/Dockerfile"
+    assert "Dockerfile found: {}".format(test_vars[4]) in test_err
+    assert temp_var == test_vars[4]
+    temp_var = functions.check_dockerfile_count([test_vars[4], test_vars[5]])
+    test_out, test_err = capfd.readouterr()
+    assert "ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.\n        Currently, you have 2 Dockerfile changes posted\n" in test_out
 
 
 @pytest.mark.test_check_test_image
 def test_check_test_image():
-    temp_var = functions.check_test_image(test_vars[3][6])
+    temp_var = functions.check_test_image(test_vars[4])
+    assert temp_var == False
+    temp_var = functions.check_test_image(test_vars[5])
     assert temp_var == True
+
+
+@pytest.mark.test_pytest_cleanup
+def test_pytest_cleanup(capfd):
+    tool_name = test_vars[4].split('/')[0]
+    tool_version = test_vars[4].split('/')[1]
+    functions.pytest_cleanup(test_vars[4])
+    test_out, test_err = capfd.readouterr()
+    assert test_out == "Successfully untagged and removed the image {}:{}\nSuccessfully removed both the temporary testing image directory {}\n".format(tool_name, tool_version, tool_name)

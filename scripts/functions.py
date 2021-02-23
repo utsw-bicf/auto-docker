@@ -110,7 +110,11 @@ def changed_paths_in_range(compare_range):
         compare_range).split()
     paths_run = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    return paths_run.communicate()[0].split("\n")[:-1]
+    out_files = paths_run.communicate()[0].split("\n")[:-1]
+    if out_files == []:
+        return "No changed paths found."
+    else:
+        return paths_run.communicate()[0].split("\n")[:-1]
 
 
 def build_docker_cmd(command, owner, tool, version):
@@ -196,8 +200,7 @@ def build_image(owner, changed_paths):
     else:
         print("""ERROR: Unable to build image \'{}/{}:{}\'
         Error Log:
-        {}""".format(owner, tool, version, build_proc.communicate()[2]))
-        exit(1)
+        {}""".format(owner, tool, version, build_proc.communicate()[1]))
 
 
 def push_images(owner, changed_paths):
@@ -225,7 +228,6 @@ def push_images(owner, changed_paths):
             print("""ERROR: Image for {}/{}:{} was unable to be pushed.
                 Please try again after verifying you have access to {}/{}:{} on DockerHub!""".format(
                 owner, tool, version, owner, tool, version))
-            exit(1)
     elif 'test_' in tool:
         print("""Test image found: \'{}/{}:{}\'
             Skipping push of test image""".format(owner, tool, version), file=sys.stderr)
@@ -284,11 +286,35 @@ def check_dockerfile_count(changed_paths):
 
 def check_test_image(dockerfile_path):
     if dockerfile_path.lower().startswith('test_'):
-        print("Image found is a test image, skipping 'Push to Dockerhub' stage.", file=sys.stderr)
+        print("Image found at {} is a test image, skipping 'Push to Dockerhub' stage.".format(
+            dockerfile_path), file=sys.stderr)
         return True
     else:
-        print("Image is not a test image, proceeding to 'Push to Dockerhub' stage.", file=sys.stderr)
+        print("Image found at {} is not a test image, proceeding to 'Push to Dockerhub' stage.".format(
+            dockerfile_path), file=sys.stderr)
         return False
+
+
+def pytest_cleanup(dockerfile_path):
+    tool, version, filename = dockerfile_path.split('/')
+    clean_command = "docker image rm -f {}/{}:{}".format(
+        tool, version, filename).split(" ")
+    clean_command = subprocess.Popen(clean_command)
+    clean_code = clean_command.wait()
+    if clean_code == 0:
+        print("Successfully untagged and removed the image {}:{}".format(tool, version))
+        remove_file_command = "rm -fr {}".format(tool).split(" ")
+        remove_file_command = subprocess.Popen(remove_file_command)
+        remove_file_code = remove_file_command.wait()
+        if remove_file_code == 0:
+            print(
+                "Successfully removed both the temporary testing image directory {}".format(tool))
+        else:
+            print(
+                "ERROR: Unable to remove the temporary testing image directory {}".format(tool))
+    else:
+        print("ERROR: Unable to untag the Dockerfile or remove the temporary image directory for {}".format(tool))
+
 
 
 def main():
@@ -296,12 +322,12 @@ def main():
     Main method, takes the command to be run
     :param command: the command to be run
     """
-    arglen = len(sys.argv)
+    arglen=len(sys.argv)
     if arglen < 1:
         print("Usage python3 scripts/functions.py <command> <list of required variables for the command>")
         sys.exit(1)
     else:
-        command = sys.argv[1]
+        command=sys.argv[1]
         if command == 'fetch_develop':
             fetch_develop()
         elif command == 'build_docker_cmd':
