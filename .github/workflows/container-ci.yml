@@ -1,13 +1,13 @@
-name: Standard Workflow CI
+name: Image building and testing CI
 
 on: [push]
 
 jobs:
   check_and_build:
     outputs:
-      paths: ""
       build: ${{ false }}
       docker_file: ""
+      is_test: "True"
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.7.8'
+          python-version: "3.7.8"
       - name: Check Build
         id: checkBuild
         env:
@@ -23,71 +23,60 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          set -e
-          source scripts/functions.sh
           git config user.name github-actions
           git config user.email github-actions@github.com
-          fetch_develop
+          python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
+          python3 scripts/functions.py 'fetch_develop'
+          git show origin/main:relations.yaml > main_relation.yml
           #Check to see if more than one Dockerfile has been updated, and if so, error out.
-          compare_range=$(get_compare_range)
-          paths=$(changed_paths_in_range "${compare_range}")
-          echo "::set-output name=paths::$(echo ${paths})"
-          print_changed "${compare_range}" "${paths}"
-          docker_counter=$(print_changed "${compare_range}" "${paths}" | grep -i "/dockerfile$" | wc -l)
-          if [ "${docker_counter}" -gt "1" ]; then
-            echo -e "ERROR: Currently we only support uploading one Dockerfile at a time, please break these into separate branches."
+          docker_file=`python3 scripts/functions.py 'check_dockerfile_count'`
+          echo "::set-output name=docker_file::$(echo ${docker_file})"
+          if [ "${docker_file}" == "1" ]; then
             exit 1
-          elif [ "${docker_counter}" -eq "1" ]; then
-            echo "New or updated Dockerfile found, building image and running CI"
-            #Check to see if the proposed version already exists in main
-            git show origin/main:relations.yaml > main_relation.yml
-            docker_file=$(print_changed "${compare_range}" "${paths}" | grep -i "/dockerfile$")
-            echo "::set-output name=docker_file::$(echo ${docker_file})"
-            python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
-            python3 scripts/check_pre_exist.py main_relation.yml ${docker_file}
-            rm main_relation.yml
-            echo "::set-output name=build::${{true}}"
-          else
+          elif [ "${docker_file}" == "0" ]; then
             echo "No new images found, running CI only."
             echo "::set-output name=build::${{ false }}"
+          else
+            echo "::set-output name=build::${{ true }}"
+            echo -e "New or updated Dockerfile found: "${docker_file}"\nBuilding image and running CI."
+            python3 scripts/check_pre_exist.py main_relation.yml ${docker_file}
+            rm main_relation.yml
           fi
 
       - name: Build Image
         id: build_image
         if: steps.checkBuild.outputs.build == 'true'
         env:
+          DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
-          paths: ${{ steps.checkBuild.outputs.paths }}
+          docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
-          set -e
-          source scripts/functions.sh
           echo "New or updated Dockerfile found, building image and running CI"
-          echo ${paths}
-          build_images "${DOCKERHUB_ORG}" "${paths}"
+          echo ${docker_file}
+          python3 scripts/functions.py 'build_image'
 
       - name: Test Image
         id: testImage
         if: steps.checkBuild.outputs.build == 'true'
         env:
+          DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
-          paths: ${{ steps.checkBuild.outputs.paths }}
+          docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
-          python3 tests/imagecheck.py "${DOCKERHUB_ORG}" ${paths}
+          python3 tests/imagecheck.py "${DOCKERHUB_ORG}" ${docker_file}
+          echo "::set-output name=is_test::$(python3 scripts/functions.py 'check_test' ${docker_file})"
 
       - name: Update relations.yaml
         id: updateYaml
-        if: steps.checkBuild.outputs.build == 'true'
+        if: steps.testImage.outputs.is_test == 'False'
         env:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
           DOCKER_USERNAME: ${{secrets.DOCKERHUB_UN}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          paths: ${{ steps.checkBuild.outputs.paths }}
           docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
-          set -e
-          source scripts/functions.sh
           git show ${DEPLOY_BRANCH}:relations.yaml > relations.yaml
           python3 scripts/update_relations.py ${docker_file}
           image_name=$(echo ${docker_file} | rev | cut -f3 -d '/' | rev)
@@ -97,7 +86,7 @@ jobs:
 
       - name: Commit New Relations
         id: commitNewRelations
-        if: steps.checkBuild.outputs.build == 'true'
+        if: steps.testImage.outputs.is_test == 'False'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -107,7 +96,7 @@ jobs:
 
       - name: Push New Relations
         id: pushNewRelations
-        if: steps.checkBuild.outputs.build == 'true'
+        if: steps.testImage.outputs.is_test == 'False'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -115,7 +104,7 @@ jobs:
 
       - name: DockerHub_Login
         id: dockerHubLogin
-        if: steps.checkBuild.outputs.build == 'true'
+        if: steps.testImage.outputs.is_test == 'False'
         uses: actions-hub/docker/login@master
         env:
           DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
@@ -123,14 +112,14 @@ jobs:
 
       - name: Push_to_DockerHub
         id: pushToDockerHub
-        if: steps.checkBuild.outputs.build == 'true'
+        if: steps.testImage.outputs.is_test == 'False'
         uses: actions-hub/docker@master
         with:
           args: push ${DOCKER_IMAGE}
 
       - name: CI Only
         id: runAllCI
-        if: steps.checkBuild.outputs.build == 'false'
+        if: steps.checkBuild.outputs.build == 'false' || steps.testImage.outputs.is_test == 'True'
         env:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
         run: |

@@ -72,8 +72,10 @@ def check_exists(master_yaml, image_name, image_version):
                      Cannot proceed, please change the image version to avoide overwritting a locked image.", file=sys.stderr)
             return False
         else:
-            print("New version of {} found, verifying that this is an updated version number".format(image_name), file=sys.stderr)
-            previous_version = np.array(list(master_yaml['images'][image_name]))[-1]
+            print("New version of {} found, verifying that this is an updated version number".format(
+                image_name), file=sys.stderr)
+            previous_version = np.array(
+                list(master_yaml['images'][image_name]))[-1]
             print(previous_version)
             return check_version_info(previous_version, image_version)
     else:

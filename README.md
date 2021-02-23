@@ -1,7 +1,10 @@
 auto-docker
 ========================================
 
-[![GitHub Actions](https://github.com/utsw-bicf/auto-docker/actions/workflows/workflow-ci.yml/badge.svg)](https://github.com/utsw-bicf/auto-docker/actions/workflows/workflow-ci.yml)
+[![Auto-Docker functionality testing CI](https://github.com/utsw-bicf/auto-docker/actions/workflows/autodocker-ci.yml/badge.svg)](https://github.com/utsw-bicf/auto-docker/actions/workflows/autodocker-ci.yml)
+[![Image building and testing CI](https://github.com/utsw-bicf/auto-docker/actions/workflows/container-ci.yml/badge.svg)](https://github.com/utsw-bicf/auto-docker/actions/workflows/container-ci.yml)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4555891.svg)](https://doi.org/10.5281/zenodo.4555891)
 
 
 This repository is a template repository of our automated Docker image builder.
