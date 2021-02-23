@@ -15,16 +15,14 @@ test_vars = []
 
 @pytest.mark.test_check_org
 def test_check_org():
-    if os.environ['DOCKERHUB_ORG'] == '':
-        os.environ['DOCKERHUB_ORG'] = 'test_org'
+    os.environ['DOCKERHUB_ORG'] = 'test_org'
     test_vars.append(functions.check_org())
     assert test_vars[0] == os.environ['DOCKERHUB_ORG']
 
 
 @pytest.mark.test_get_deploy_branch
 def test_get_deploy_branch():
-    if os.environ['DEPLOY_BRANCH'] == '':
-        os.environ['DEPLOY_BRANCH'] = 'test_branch'
+    os.environ['DEPLOY_BRANCH'] = 'test_branch'
     test_vars.append(functions.get_deploy_branch())
     assert test_vars[1] == os.environ['DEPLOY_BRANCH']
 
