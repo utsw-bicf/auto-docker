@@ -87,7 +87,8 @@ def test_ensure_local_image(capfd):
     tool_version = test_vars[4].split('/')[1]
     functions.ensure_local_image(test_vars[0], tool_name, tool_version)
     test_out, test_err = capfd.readouterr()
-    assert "Image \'{}/{}:{}\' already exists locally!\n".format(test_vars[0], tool_name, tool_version) in test_err
+    assert "Image \'{}/{}:{}\' already exists locally!\n".format(
+        test_vars[0], tool_name, tool_version) in test_err
 
 
 @pytest.mark.test_build_image
@@ -154,4 +155,5 @@ def test_pytest_cleanup(capfd):
     tool_version = test_vars[4].split('/')[1]
     functions.pytest_cleanup(test_vars[4])
     test_out, test_err = capfd.readouterr()
-    assert test_out == "Successfully untagged and removed the image {}:{}\nSuccessfully removed both the temporary testing image directory {}\n".format(tool_name, tool_version, tool_name)
+    assert test_out == "Successfully untagged and removed the image {}:{}\nSuccessfully removed both the temporary testing image directory {}\n".format(
+        tool_name, tool_version, tool_name)
