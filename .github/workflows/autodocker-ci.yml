@@ -1,4 +1,4 @@
-name: Image building and testing CI
+name: Auto-Docker functionality testing CI
 
 on: [push]
 
