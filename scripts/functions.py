@@ -273,11 +273,11 @@ def check_dockerfile_count(changed_paths):
     # Fail if there is more than one Dockerfile to be built
     if dockerfile_count > 1:
         print("""ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.
-        Currently, you have {} Dockerfile changes posted""".format(dockerfile_count))
+        Currently, you have {} Dockerfile changes posted""".format(dockerfile_count), file=sys.stderr)
         dockerfile_path = '1'
     # Error if no changes have been made to any Dockerfiles
     elif dockerfile_count == 0:
-        print("No changes to Dockerfiles or latest symlinks detected, nothing to build or push.")
+        print("No changes to Dockerfiles or latest symlinks detected, nothing to build or push.", file=sys.stderr)
         dockerfile_path = '0'
     else:
         print("Dockerfile found: {}".format(dockerfile_path), file=sys.stderr)
