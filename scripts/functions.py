@@ -185,23 +185,22 @@ def build_image(owner, changed_paths):
     :param changed_paths: List of all files that had been changed between two Git SHAs
     """
     dockerfile_path = check_dockerfile_count(changed_paths)
-    if dockerfile_path == '1':
-        print(dockerfile_path)
-        print("Building changed Dockerfiles...\n", file=sys.stderr)
-        tool, version, filename = dockerfile_path.split('/')
-        print("Building {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
-        build_command = build_docker_cmd(
-            "build", owner, tool, version).replace('\"', '').split(" ")
-        build_proc = subprocess.Popen(build_command)
-        build_code = build_proc.wait()
-        if build_code == 0:
-            print("Successfully built {}/{}:{}...".format(owner,
-                                                          tool, version), file=sys.stderr)
-            return True
-        else:
-            print("""ERROR: Unable to build image \'{}/{}:{}\'
-            Error Log:
-            {}""".format(owner, tool, version, build_proc.communicate()[1]))
+    print(dockerfile_path)
+    print("Building changed Dockerfiles...\n", file=sys.stderr)
+    tool, version, filename = dockerfile_path.split('/')
+    print("Building {}/{}:{}...".format(owner, tool, version), file=sys.stderr)
+    build_command = build_docker_cmd(
+        "build", owner, tool, version).replace('\"', '').split(" ")
+    build_proc = subprocess.Popen(build_command)
+    build_code = build_proc.wait()
+    if build_code == 0:
+        print("Successfully built {}/{}:{}...".format(owner,
+                                                      tool, version), file=sys.stderr)
+        return True
+    else:
+        print("""ERROR: Unable to build image \'{}/{}:{}\'
+        Error Log:
+        {}""".format(owner, tool, version, build_proc.communicate()[1]))
 
 
 def push_images(owner, changed_paths):
