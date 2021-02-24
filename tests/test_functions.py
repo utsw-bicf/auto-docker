@@ -15,16 +15,14 @@ test_vars = []
 
 @pytest.mark.test_check_org
 def test_check_org():
-    if os.environ['DOCKERHUB_ORG'] == '':
-        os.environ['DOCKERHUB_ORG'] = 'test_org'
+    os.environ['DOCKERHUB_ORG'] = 'test_org'
     test_vars.append(functions.check_org())
     assert test_vars[0] == os.environ['DOCKERHUB_ORG']
 
 
 @pytest.mark.test_get_deploy_branch
 def test_get_deploy_branch():
-    if os.environ['DEPLOY_BRANCH'] == '':
-        os.environ['DEPLOY_BRANCH'] = 'test_branch'
+    os.environ['DEPLOY_BRANCH'] = 'test_branch'
     test_vars.append(functions.get_deploy_branch())
     assert test_vars[1] == os.environ['DEPLOY_BRANCH']
 
@@ -138,7 +136,7 @@ def test_check_dockerfile_count(capfd):
     assert temp_var == test_vars[4]
     temp_var = functions.check_dockerfile_count([test_vars[4], test_vars[5]])
     test_out, test_err = capfd.readouterr()
-    assert "ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.\n        Currently, you have 2 Dockerfile changes posted\n" in test_out
+    assert "ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.\n        Currently, you have 2 Dockerfile changes posted\n" in test_err
 
 
 @pytest.mark.test_check_test_image
