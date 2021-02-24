@@ -1,10 +1,10 @@
 auto-docker
 ========================================
 
-[![Auto-Docker functionality testing CI](https://github.com/utsw-bicf/auto-docker/actions/workflows/autodocker-ci.yml/badge.svg?branch=main)](https://github.com/utsw-bicf/auto-docker/actions/workflows/autodocker-ci.yml)
-[![Image building and testing CI](https://github.com/utsw-bicf/auto-docker/actions/workflows/container-ci.yml/badge.svg)](https://github.com/utsw-bicf/auto-docker/actions/workflows/container-ci.yml)
+[![Auto-Docker functionality testing CI](https://github.com/test/test-repo/actions/workflows/autodocker-ci.yml/badge.svg?branch=main)](https://github.com/test/test-repo/actions/workflows/autodocker-ci.yml)
+[![Image building and testing CI](https://github.com/test/test-repo/actions/workflows/container-ci.yml/badge.svg)](https://github.com/test/test-repo/actions/workflows/container-ci.yml)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4555891.svg)](https://doi.org/10.5281/zenodo.4555891)
+[![Auto-docker DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4555891.svg)](https://doi.org/10.5281/zenodo.4555891)
 
 
 This repository is a template repository of our automated Docker image builder.
@@ -15,12 +15,12 @@ Introduction
 
 The purpose of this system is the remote building and testin of Docker images from a Docker build file (Dockerfile) and a unit test file (unittest.yml). This system allows users to build, test and maintin Docker images outside of firewalls, proxies and machine limitations.Additionally, it is a storage repository, and can act as a functional archive and version control for all you Dockerfile recipes (though not the images themselves).
 
-The repository is a general purpose template for creating new docker building instances, as detailed in [Wiki](https://github.com/utsw-bicf/auto-docker/wiki). See [Setup](https://github.com/utsw-bicf/auto-docker/wiki/Setup) for documentation how to modify the repository for you use.
+The repository is a general purpose template for creating new docker building instances, as detailed in [Wiki](https://github.com/test/test-repo/wiki). See [Setup](https://github.com/test/test-repo/wiki/Setup) for documentation how to modify the repository for you use.
 
 Feedback
 ========
 
-If you experience any issues with the auto-docker or would like to contribute to its source code, please visit [`bicf-utsw/auto-docker`](https://github.com/utsw-bicf/auto-docker).
+If you experience any issues with the auto-docker or would like to contribute to its source code, please visit [`bicf-utsw/auto-docker`](https://github.com/test/test-repo).
 
 Please open [an issue](https://git.io/JtyFp) for questions related to auto-docker usage, bug reports, or general inquiries.
 
@@ -33,7 +33,7 @@ If you'd like to write some code for to improve auto-docker, the standard workfl
 
 1. Check that there isn't already an issue about your idea in the [an issue](https://git.io/JtyFp) to avoid duplicating work
     * If there isn't one already, please create one so that others know you're working on this
-2. [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) the [`bicf-utsw/auto-docker`](https://github.com/utsw-bicf/auto-docker) to your GitHub account
+2. [Fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) the [`bicf-utsw/auto-docker`](https://github.com/test/test-repo) to your GitHub account
 3. Make the necessary changes / additions within your forked repository
 4. Submit a Pull Request against the `develop` branch and wait for the code to be reviewed and merged
 
