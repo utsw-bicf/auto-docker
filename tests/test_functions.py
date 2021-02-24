@@ -136,7 +136,7 @@ def test_check_dockerfile_count(capfd):
     assert temp_var == test_vars[4]
     temp_var = functions.check_dockerfile_count([test_vars[4], test_vars[5]])
     test_out, test_err = capfd.readouterr()
-    assert "ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.\n        Currently, you have 2 Dockerfile changes posted\n" in test_out
+    assert "ERROR: System is currently only setup to handle one Dockerfile changed or added at a time.\n        Currently, you have 2 Dockerfile changes posted\n" in test_err
 
 
 @pytest.mark.test_check_test_image
