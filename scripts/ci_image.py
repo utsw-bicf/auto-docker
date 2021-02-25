@@ -42,7 +42,7 @@ def get_test_list(filename):
     """
     with open(filename) as infile:
         testinfo_list = []
-        unittest_config = yaml.load(infile)
+        unittest_config = yaml.safe_load(infile)
         for testinfo in unittest_config['commands']:
             cmd = testinfo['cmd']
             expect_text = testinfo['expect_text']
@@ -161,7 +161,7 @@ def find_and_run_tests(owner, changed_paths):
 def main():
     if len(sys.argv) < 2:
         print(
-            "Usage python3 tests/imagecheck.py <docker_owner> [<unittest_or_dockerfile_path>...]")
+            "Usage python3 tests/ci_image.py <docker_owner> [<unittest_or_dockerfile_path>...]")
         sys.exit(1)
     else:
         owner = sys.argv[1]
