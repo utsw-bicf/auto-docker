@@ -139,33 +139,29 @@ def write_yaml():
     yaml_file.close()
 
 
-def update_ancestor(parent_org, parent_name, parent_version, docker_image, docker_repo):
+def update_ancestor(parent, docker_image):
     """
     Updates any ancestor entries tied with this image to include them in their child tables
     :param parent: The parent image specified for updating
     :param docker_image: The docker image specified for updating in 'image_name:image_version' format
     """
+    parent_name = parent.split(':')[0]
+    parent_version = parent.split(':')[1]
     grandparent = []
     new_children = []
-
-
-
-
-
-
-    if parent_name in ORIDATA['images'][parent_org]:
-        new_children = ORIDATA['images'][parent_org][parent_name][parent_version]['children']
+    if parent in ORIDATA['images']:
+        new_children = ORIDATA['images'][parent_name][parent_version]['children']
         if (new_children == 'none') or (new_children == [None]) or (new_children == []):
             new_children = [docker_image]
-        elif not docker_image in ORIDATA['images'][parent_org][parent_name][parent_version]['children']:
-            new_children.append(docker_image)
-        grandparent = ORIDATA['images'][parent_org][parent_name][parent_version]['parents']
+        elif not docker_image in ORIDATA['images'][parent_name][parent_version]['children']:
+            new_children.append([docker_image])
+        grandparent = ORIDATA['images'][parent_name][parent_version]['parents']
     else:
-        new_children = [docker_image]
+        new_children.append([docker_image])
     build_entry(parent_name, parent_version, grandparent, new_children)
 
 
-def build_entry(dockerhub_org, image_name, image_version, parent_images, child_images):
+def build_entry(image_name, image_version, parent_images, child_images):
     """
     Builds a new yaml entry from the parent and child information
     :param image_name: The name of the image to be updated/created
@@ -173,21 +169,21 @@ def build_entry(dockerhub_org, image_name, image_version, parent_images, child_i
     :param parents: The parent information for the enty
     :param children: The children information for the entry
     """
-    if image_name in ORIDATA['images'][dockerhub_org]:
-        if image_version in ORIDATA['images'][dockerhub_org][image_name]:
-            for parent in ORIDATA['images'][dockerhub_org][image_name][image_version]['parents']:
+    if image_name in ORIDATA['images']:
+        if image_version in ORIDATA['images'][image_name]:
+            for parent in ORIDATA['images'][image_name][image_version]['parents']:
                 if not parent in parent_images:
-                    parent_images += [parent]
-            for child in ORIDATA['images'][dockerhub_org][image_name][image_version]['children']:
+                    parent_images.append([parent])
+            for child in ORIDATA['images'][image_name][image_version]['children']:
                 if not child in child_images:
-                    child_images += [child]
+                    child_images.append([child])
             if (len(child_images) > 1) and (None in child_images):
                 child_images.remove(None)
             new_image = {
                 'parents': parent_images,
                 'children': child_images
             }
-            NEWDATA['images'][dockerhub_org][image_name][image_version].update(new_image)
+            NEWDATA['images'][image_name][image_version].update(new_image)
         else:
             new_image = {
                 image_version: {
@@ -195,11 +191,7 @@ def build_entry(dockerhub_org, image_name, image_version, parent_images, child_i
                     'children': child_images
                 }
             }
-            new_latest = {
-                image_name: image_version
-            }
-            NEWDATA['images'][dockerhub_org][image_name].update(new_image)
-            NEWDATA['latest'].update(new_latest)
+            NEWDATA['images'][image_name].update(new_image)
     else:
         new_image = {
             image_name: {
@@ -209,29 +201,23 @@ def build_entry(dockerhub_org, image_name, image_version, parent_images, child_i
                 }
             }
         }
-        NEWDATA['images'][dockerhub_org].update(new_image)
-    new_latest = {
-        image_name: image_version
-    }
-    NEWDATA['latest'][dockerhub_org].update(new_latest)
-    return new_image
+        NEWDATA['images'].update(new_image)
 
 
-
-def get_children(dockerhub_org, image_version, image_name):
+def get_children(image_version, image_name):
     """
     Finds any children image in the relations.yaml file
     :param image_name: str : Docker image to get the child images from
     :param image_version: str : Specific version of the image to get the child images from
     """
-    if image_name in ORIDATA['images'][dockerhub_org]:
-        if image_version in ORIDATA['images'][dockerhub_org][image_name]:
-            return ORIDATA['images'][dockerhub_org][image_name][image_version]['children']
+    if image_name in ORIDATA['images']:
+        if image_version in ORIDATA['images'][image_name]:
+            return ORIDATA['images'][image_name][image_version]['children']
         else:
-            versions = np.array(list(ORIDATA['images'][dockerhub_org][image_name]))
+            versions = np.array(list(ORIDATA['images'][image_name]))
             prev_version = np.array(versions)[-1]
             update_type = get_update_type(image_version, prev_version)
-            update_children(ORIDATA['images'][dockerhub_org][image_name]
+            update_children(ORIDATA['images'][image_name]
                             [prev_version]['children'], update_type)
             return [None]
     else:
@@ -246,16 +232,11 @@ def get_parents():
     with open(DOCKERFILE_PATH, "r") as dockerfile:
         for line in dockerfile:
             if 'FROM ' in line:
-                parent = line.split()[1]
-                if len(parent.split('/')) > 1:
-                    DOCKERHUB_ORG = parent.split(':')[0].split('/')[0]
-                    parent_name = parent.split(':')[0].split('/')[1]
+                line = line.split()[1]
+                if line.lower() == 'scratch':
+                    return None
                 else:
-                    DOCKERHUB_ORG = 'None'
-                    parent_name = parent.split(':')[0]
-                parent_version = parent.split(':')[1]
-                parents.append([DOCKERHUB_ORG, parent_name, parent_version])
-    dockerfile.close()
+                    parents.append([line.split()[1].split('/')[-1]])
     return parents
 
 
@@ -264,9 +245,16 @@ def load_yaml():
     Loads a yaml file and returns a python yaml object
     """
     with open(RELATION_FILENAME) as yaml_file:
-        yaml_data= yaml.safe_load(yaml_file)
+        yaml_data = yaml.safe_load(yaml_file)
     yaml_file.close()
     return yaml_data
+
+
+def build_latest(image_name, image_version):
+    new_latest = {
+        image_name: image_version
+    }
+    NEWDATA['latest'].update(new_latest)
 
 
 def main():
@@ -281,24 +269,20 @@ def main():
         sys.exit(1)
     else:
         # Setup the global variables
-        DOCKERFILE_PATH= os.path.abspath(sys.argv[1])
-#        DOCKERHUB_ORG = os.environ['DOCKERHUB_ORG']
-        image_name= re.split('/|\\\\', DOCKERFILE_PATH)[-3]
-        image_version= re.split('/|\\\\', DOCKERFILE_PATH)[-2]
-        docker_image= image_name + ':' + image_version
-        dockerhub_repo= os.environ['DOCKERHUB_ORG']
-        if dockerhub_repo == '':    
-            dockerhub_repo = 'None'
-        ORIDATA= load_yaml()
-        NEWDATA= load_yaml()
-        parents= get_parents()
-        children= get_children(dockerhub_repo, image_version, image_name)
+        DOCKERFILE_PATH = os.path.abspath(sys.argv[1])
+        image_name = re.split('/|\\\\', DOCKERFILE_PATH)[-3]
+        image_version = re.split('/|\\\\', DOCKERFILE_PATH)[-2]
+        docker_image = image_name + ':' + image_version
+        ORIDATA = load_yaml()
+        NEWDATA = load_yaml()
+        parents = get_parents()
+        children = get_children(image_version, image_name)
     # Start by adding the image to the table
-        build_entry(dockerhub_org, image_name, image_version,
-                    parent_name, parent_version, children)
+        build_entry(image_name, image_version, parents, children)
+        build_latest(image_name, image_version)
     # Update all parent images
     for parent in parents:
-        update_ancestor(parent[0], parent[1], parent[2], docker_image, docker_repo)
+        update_ancestor(parent, docker_image)
     # Write out the new relations.yaml
     write_yaml()
 
