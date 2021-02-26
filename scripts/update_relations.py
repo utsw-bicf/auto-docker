@@ -35,28 +35,27 @@ def get_update_type(image_version, prev_version):
     curr_version_minor = int(image_version.split(sep=".")[1])
     curr_version_patch = int(image_version.split(sep=".")[2])
     # Ensure that the new major version is not less than the old major version
-    if (curr_version_major < prev_version_major):
-        print("ERROR: New major version number {} is less than the previous major version number {}, this is not allowed!\
-            \nPlease re-version your Docker image.".format(curr_version_major, prev_version_major))
+    if curr_version_major < prev_version_major:
+        print("ERROR: New major version number {} is less than the previous major version number {}, this is not allowed!\nPlease re-version your Docker image.".format(curr_version_major, prev_version_major))
         exit(1)
-    elif(curr_version_major > prev_version_major):
+    elif curr_version_major > prev_version_major:
         print("New major version number detected, re-versioning and creating new child image paths.")
         return 'major'
     else:
         # Do the same with the minor version
-        if (curr_version_minor < prev_version_minor):
-            print("ERROR: New minor version number {} is less than the previous minor version number {} under the same major version {}, this is not allowed!\
-                \nPlease re-version your Docker image.".format(curr_version_minor, prev_version_minor, prev_version_major))
+        if curr_version_minor < prev_version_minor:
+            print("ERROR: New minor version number {} is less than the previous minor version number {} under the same major version {}, this is not allowed!\nPlease re-version your Docker image.".format(
+                curr_version_minor, prev_version_minor, prev_version_major))
             exit(1)
-        elif(curr_version_minor > prev_version_minor):
+        elif curr_version_minor > prev_version_minor:
             print(
                 "New minor version number detected, re-versioning and creating new child image paths.")
             return 'minor'
         else:
             # Finally check the patch version, and default to this
-            if(curr_version_patch < prev_version_patch):
-                print("ERROR: New patch version number {} is less than the previous patch version number {} under the same major-minor version {}.{}, this is not allowed!\
-                    \nPlease re-version your Docker image.".format(curr_version_patch, prev_version_patch, curr_version_major, curr_version_minor))
+            if curr_version_patch < prev_version_patch:
+                print("ERROR: New patch version number {} is less than the previous patch version number {} under the same major-minor version {}.{}, this is not allowed!\nPlease re-version your Docker image.".format(
+                    curr_version_patch, prev_version_patch, curr_version_major, curr_version_minor))
                 exit(1)
             else:
                 print("Patch detected, creating new child image paths.")
@@ -191,6 +190,7 @@ def build_entry(image_name, image_version, parent_images, child_images):
                     'children': child_images
                 }
             }
+            print(new_image)
             NEWDATA['images'][image_name].update(new_image)
     else:
         new_image = {
@@ -236,7 +236,7 @@ def get_parents():
                 if line.lower() == 'scratch':
                     return None
                 else:
-                    parents.append([line.split()[1].split('/')[-1]])
+                    parents.append([line.split('/')[-1]])
     return parents
 
 
