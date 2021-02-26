@@ -31,4 +31,4 @@ jobs:
           LC_ALL: C.UTF-8
         run: |
           python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1 pytest==6.2.2
-          pytest tests/update_relations.py -vv
+          pytest tests/test_update_relations.py -vv
