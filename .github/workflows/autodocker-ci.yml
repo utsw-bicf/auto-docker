@@ -27,6 +27,7 @@ jobs:
         env:
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           LANG: C.UTF-8
           LC_ALL: C.UTF-8
         run: |
