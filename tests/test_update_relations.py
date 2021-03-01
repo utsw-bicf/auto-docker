@@ -48,7 +48,7 @@ def test_get_update_type(capfd):
 
 @pytest.mark.test_is_terminated
 def test_is_terminated():
-    with open('tests/Test_Relations.yaml') as yaml_file:
+    with open('tests/relations.yaml') as yaml_file:
         update_relations.ORIDATA = yaml.safe_load(yaml_file)
     yaml_file.close()
     assert update_relations.is_terminated('test_image') == False
@@ -72,7 +72,7 @@ def test_get_parents():
 
 @pytest.mark.test_build_entry
 def test_build_entry():
-    with open('tests/Test_Relations.yaml') as yaml_file:
+    with open('tests/relations.yaml') as yaml_file:
         update_relations.NEWDATA = yaml.safe_load(yaml_file)
     yaml_file.close()
     assert update_relations.ORIDATA == update_relations.NEWDATA
@@ -88,7 +88,7 @@ def test_build_entry():
 
 @pytest.mark.test_update_ancestor
 def test_update_ancestor():
-    with open('tests/Test_Relations.yaml') as yaml_file:
+    with open('tests/relations.yaml') as yaml_file:
         update_relations.NEWDATA = yaml.safe_load(yaml_file)
     yaml_file.close()
     temp_var_ori = update_relations.ORIDATA
@@ -99,7 +99,7 @@ def test_update_ancestor():
 
 @pytest.mark.test_build_latest
 def test_build_latest():
-    with open('tests/Test_Relations.yaml') as yaml_file:
+    with open('tests/relations.yaml') as yaml_file:
         update_relations.NEWDATA = yaml.safe_load(yaml_file)
     yaml_file.close()
     temp_var_ori = update_relations.ORIDATA
