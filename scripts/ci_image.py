@@ -109,7 +109,7 @@ def get_test_file_path(file_path):
     :return: str: a path to a unittest.yml file to test or None if there is no associated test file
     """
     filename = os.path.basename(file_path)
-    if filename in ["Dockerfile", UNITTEST_FILENAME]:
+    if filename in ["Dockerfile", UNITTEST_FILENAME] or filename in ["Test_Dockerfile", UNITTEST_FILENAME]:
         parent_directory = os.path.dirname(file_path)
         unittest_filepath = "{}/{}".format(parent_directory, UNITTEST_FILENAME)
         if os.path.exists(unittest_filepath):
