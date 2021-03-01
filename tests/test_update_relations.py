@@ -65,7 +65,7 @@ def test_get_children():
 
 @pytest.mark.test_get_parents
 def test_get_parents():
-    update_relations.DOCKERFILE_PATH = 'tests/Dockerfile'
+    update_relations.DOCKERFILE_PATH = 'tests/Test_Dockerfile'
     test_vars.append(update_relations.get_parents())
     assert test_vars[1] == [['ubuntu:18.04']]
 

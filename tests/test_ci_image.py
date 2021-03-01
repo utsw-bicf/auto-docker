@@ -14,8 +14,8 @@ test_vars = []
 
 @pytest.mark.test_run_bash_cmd
 def test_run_bash_cmd():
-    test_out = ci_image.run_bash_cmd('find tests/Dockerfile')
-    assert 'tests/Dockerfile\n' == test_out
+    test_out = ci_image.run_bash_cmd('find tests/Test_Dockerfile')
+    assert 'tests/Test_Dockerfile\n' == test_out
 
 
 @pytest.mark.test_get_test_list
@@ -40,17 +40,17 @@ def test_print_test_error(capfd):
 
 @pytest.mark.test_get_test_file_path
 def test_get_test_file_path():
-    test_out = ci_image.get_test_file_path('tests/Dockerfile')
+    test_out = ci_image.get_test_file_path('tests/Test_Dockerfile')
     assert test_out == 'tests/unittest.yml'
 
 
 @pytest.mark.test_get_unittest_file_paths
 def test_get_unittest_file_paths():
-    test_out = ci_image.get_unittest_file_paths(['tests/Dockerfile'])
+    test_out = ci_image.get_unittest_file_paths(['tests/Test_Dockerfile'])
     assert test_out == {'tests/unittest.yml'}
 
 
 @pytest.mark.test_find_and_run_tests
 def test_find_and_run_tests():
-    test_out = ci_image.find_and_run_tests(os.environ['DOCKERHUB_ORG'], 'tests/Dockerfile')
+    test_out = ci_image.find_and_run_tests(os.environ['DOCKERHUB_ORG'], 'tests/Test_Dockerfile')
     assert test_out == False
