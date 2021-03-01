@@ -14,7 +14,7 @@ test_vars = []
 
 @pytest.mark.test_load_yaml
 def test_load_yaml():
-    test_vars.append(ci_latest_images.load_yaml('tests/relations.yaml'))
+    test_vars.append(ci_latest_images.load_yaml('tests/Test_Relations.yaml'))
     assert test_vars[0] == {'images': {'base': {'1.0.0': {'children': [None], 'parents': ['ubuntu:18.04']}}, 'ubuntu': {
         '18.04': {'children': ['base:1.0.0'], 'parents': []}}}, 'latest': {'base': '1.0.0'}, 'terminated': ['test_image2']}
 
