@@ -100,7 +100,7 @@ def main():
     """
 
     if len(sys.argv) < 2:
-        print("Usage python3 scripts/check_pre_exist.py <master relations.yaml> <Dockerfile path>")
+        print("Usage python3 scripts/validate_version.py <master relations.yaml> <Dockerfile path>")
         sys.exit(1)
     else:
         master_yaml = load_yaml(os.path.abspath(sys.argv[1]))
