@@ -1,5 +1,12 @@
 <hr>
 
+# v1.1.0
+**User Facing**
+* Split testing categories into tests for images and tests for auto-docker
+* Fixed recursion bug when adding image
+
+<hr>
+
 # v1.0.0
 **User Facing**
 * Migrated from bash to python for building and testing
