@@ -39,7 +39,7 @@ jobs:
           else
             echo "::set-output name=build::${{ true }}"
             echo -e "New or updated Dockerfile found: "${docker_file}"\nBuilding image and running CI."
-            python3 scripts/check_pre_exist.py main_relation.yml ${docker_file}
+            python3 scripts/validate_version.py main_relation.yml ${docker_file}
             rm main_relation.yml
           fi
 
@@ -63,7 +63,7 @@ jobs:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
-          python3 tests/imagecheck.py "${DOCKERHUB_ORG}" ${docker_file}
+          python3 scripts/ci_images.py "${DOCKERHUB_ORG}" ${docker_file}
           echo "::set-output name=is_test::$(python3 scripts/functions.py 'check_test' ${docker_file})"
 
       - name: Update relations.yaml
@@ -124,4 +124,4 @@ jobs:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
         run: |
           python3 -m pip install numpy==1.19.2 PyGitHub==1.53 PyYAML==5.3.1
-          python3 tests/ci_latest_paths.py "${DOCKERHUB_ORG}" relations.yaml
+          python3 scripts/ci_latest_images.py "${DOCKERHUB_ORG}" relations.yaml

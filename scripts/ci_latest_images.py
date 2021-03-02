@@ -37,7 +37,7 @@ def main():
     """
     if len(sys.argv) < 1:
         print(
-            "Usage python3 scripts/getLatestPaths.py <docker_owner> <relations.yaml path>")
+            "Usage python3 scripts/ci_latest_images.py <docker_owner> <relations.yaml path>")
         sys.exit(1)
     else:
         owner = sys.argv[1]
@@ -48,7 +48,7 @@ def main():
             image_name = "{}/{}:{}".format(owner, image, tag).replace("+", "_")
             pull_image(image_name)
             image_path = image + "/" + tag + "/unittest.yml"
-            if os.system("python3 tests/imagecheck.py \"" + owner + "\" " + image_path) != 0:
+            if os.system("python3 scripts/ci_image.py \"" + owner + "\" " + image_path) != 0:
                 print("ERROR: Image testing failed for " + image_name)
                 sys.exit(1)
 

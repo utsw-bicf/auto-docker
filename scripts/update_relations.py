@@ -35,28 +35,27 @@ def get_update_type(image_version, prev_version):
     curr_version_minor = int(image_version.split(sep=".")[1])
     curr_version_patch = int(image_version.split(sep=".")[2])
     # Ensure that the new major version is not less than the old major version
-    if (curr_version_major < prev_version_major):
-        print("ERROR: New major version number {} is less than the previous major version number {}, this is not allowed!\
-            \nPlease re-version your Docker image.".format(curr_version_major, prev_version_major))
+    if curr_version_major < prev_version_major:
+        print("ERROR: New major version number {} is less than the previous major version number {}, this is not allowed!\nPlease re-version your Docker image.".format(curr_version_major, prev_version_major))
         exit(1)
-    elif(curr_version_major > prev_version_major):
+    elif curr_version_major > prev_version_major:
         print("New major version number detected, re-versioning and creating new child image paths.")
         return 'major'
     else:
         # Do the same with the minor version
-        if (curr_version_minor < prev_version_minor):
-            print("ERROR: New minor version number {} is less than the previous minor version number {} under the same major version {}, this is not allowed!\
-                \nPlease re-version your Docker image.".format(curr_version_minor, prev_version_minor, prev_version_major))
+        if curr_version_minor < prev_version_minor:
+            print("ERROR: New minor version number {} is less than the previous minor version number {} under the same major version {}, this is not allowed!\nPlease re-version your Docker image.".format(
+                curr_version_minor, prev_version_minor, prev_version_major))
             exit(1)
-        elif(curr_version_minor > prev_version_minor):
+        elif curr_version_minor > prev_version_minor:
             print(
                 "New minor version number detected, re-versioning and creating new child image paths.")
             return 'minor'
         else:
             # Finally check the patch version, and default to this
-            if(curr_version_patch < prev_version_patch):
-                print("ERROR: New patch version number {} is less than the previous patch version number {} under the same major-minor version {}.{}, this is not allowed!\
-                    \nPlease re-version your Docker image.".format(curr_version_patch, prev_version_patch, curr_version_major, curr_version_minor))
+            if curr_version_patch < prev_version_patch:
+                print("ERROR: New patch version number {} is less than the previous patch version number {} under the same major-minor version {}.{}, this is not allowed!\nPlease re-version your Docker image.".format(
+                    curr_version_patch, prev_version_patch, curr_version_major, curr_version_minor))
                 exit(1)
             else:
                 print("Patch detected, creating new child image paths.")
@@ -154,10 +153,10 @@ def update_ancestor(parent, docker_image):
         if (new_children == 'none') or (new_children == [None]) or (new_children == []):
             new_children = [docker_image]
         elif not docker_image in ORIDATA['images'][parent_name][parent_version]['children']:
-            new_children += [docker_image]
+            new_children.append([docker_image])
         grandparent = ORIDATA['images'][parent_name][parent_version]['parents']
     else:
-        new_children = [docker_image]
+        new_children.append([docker_image])
     build_entry(parent_name, parent_version, grandparent, new_children)
 
 
@@ -173,10 +172,10 @@ def build_entry(image_name, image_version, parent_images, child_images):
         if image_version in ORIDATA['images'][image_name]:
             for parent in ORIDATA['images'][image_name][image_version]['parents']:
                 if not parent in parent_images:
-                    parent_images += [parent]
+                    parent_images.append([parent])
             for child in ORIDATA['images'][image_name][image_version]['children']:
                 if not child in child_images:
-                    child_images += [child]
+                    child_images.append([child])
             if (len(child_images) > 1) and (None in child_images):
                 child_images.remove(None)
             new_image = {
@@ -191,11 +190,8 @@ def build_entry(image_name, image_version, parent_images, child_images):
                     'children': child_images
                 }
             }
-            new_latest = {
-                image_name: image_version
-            }
+            print(new_image)
             NEWDATA['images'][image_name].update(new_image)
-            NEWDATA['latest'].update(new_latest)
     else:
         new_image = {
             image_name: {
@@ -206,11 +202,6 @@ def build_entry(image_name, image_version, parent_images, child_images):
             }
         }
         NEWDATA['images'].update(new_image)
-    new_latest = {
-        image_name: image_version
-    }
-    NEWDATA['latest'].update(new_latest)
-    return new_image
 
 
 def get_children(image_version, image_name):
@@ -241,7 +232,11 @@ def get_parents():
     with open(DOCKERFILE_PATH, "r") as dockerfile:
         for line in dockerfile:
             if 'FROM ' in line:
-                parents += [line.split()[1].split('/')[-1]]
+                line = line.split()[1]
+                if line.lower() == 'scratch':
+                    return None
+                else:
+                    parents.append([line.split('/')[-1]])
     return parents
 
 
@@ -253,6 +248,13 @@ def load_yaml():
         yaml_data = yaml.safe_load(yaml_file)
     yaml_file.close()
     return yaml_data
+
+
+def build_latest(image_name, image_version):
+    new_latest = {
+        image_name: image_version
+    }
+    NEWDATA['latest'].update(new_latest)
 
 
 def main():
@@ -277,6 +279,7 @@ def main():
         children = get_children(image_version, image_name)
     # Start by adding the image to the table
         build_entry(image_name, image_version, parents, children)
+        build_latest(image_name, image_version)
     # Update all parent images
     for parent in parents:
         update_ancestor(parent, docker_image)
