@@ -83,7 +83,7 @@ def test_build_entry():
     assert update_relations.NEWDATA['images']['base']['1.0.1']['children'] == [
         [None]]
     assert update_relations.NEWDATA['images']['base']['1.0.1']['parents'] == [
-        ['ubuntu:18.04']]
+        'ubuntu:18.04']
 
 
 @pytest.mark.test_update_ancestor
