@@ -1,5 +1,11 @@
 <hr>
 
+# v1.1.1
+**User Facing**
+* Fixed CI to expect list of changed files instead of string of a single file
+
+<hr>
+
 # v1.1.0
 **User Facing**
 * Split testing categories into tests for images and tests for auto-docker
