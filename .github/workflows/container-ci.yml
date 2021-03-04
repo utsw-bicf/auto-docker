@@ -63,7 +63,7 @@ jobs:
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           docker_file: ${{ steps.checkBuild.outputs.docker_file }}
         run: |
-          python3 scripts/ci_image.py "${DOCKERHUB_ORG}" ${docker_file}
+          python3 scripts/ci_image.py "${DOCKERHUB_ORG}" "[${docker_file}]"
           echo "::set-output name=is_test::$(python3 scripts/functions.py 'check_test' ${docker_file})"
 
       - name: Update relations.yaml
