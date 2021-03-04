@@ -67,7 +67,7 @@ def test_get_children():
 def test_get_parents():
     update_relations.DOCKERFILE_PATH = 'tests/Test_Dockerfile'
     test_vars.append(update_relations.get_parents())
-    assert test_vars[1] == [['ubuntu:18.04']]
+    assert test_vars[1] == ['ubuntu:18.04']
 
 
 @pytest.mark.test_build_entry
@@ -83,7 +83,7 @@ def test_build_entry():
     assert update_relations.NEWDATA['images']['base']['1.0.1']['children'] == [
         [None]]
     assert update_relations.NEWDATA['images']['base']['1.0.1']['parents'] == [
-        ['ubuntu:18.04']]
+        'ubuntu:18.04']
 
 
 @pytest.mark.test_update_ancestor
@@ -93,8 +93,7 @@ def test_update_ancestor():
     yaml_file.close()
     temp_var_ori = update_relations.ORIDATA
     update_relations.update_ancestor("ubuntu:18.04", "base:1.0.1")
-    assert [
-        'base:1.0.1'] in update_relations.NEWDATA['images']['ubuntu']['18.04']['children']
+    assert 'base:1.0.1' in update_relations.NEWDATA['images']['ubuntu']['18.04']['children']
 
 
 @pytest.mark.test_build_latest

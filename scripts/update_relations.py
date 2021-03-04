@@ -156,7 +156,7 @@ def update_ancestor(parent, docker_image):
             new_children.append([docker_image])
         grandparent = ORIDATA['images'][parent_name][parent_version]['parents']
     else:
-        new_children.append([docker_image])
+        new_children.append(docker_image)
     build_entry(parent_name, parent_version, grandparent, new_children)
 
 
@@ -236,7 +236,7 @@ def get_parents():
                 if line.lower() == 'scratch':
                     return None
                 else:
-                    parents.append([line.split('/')[-1]])
+                    parents.append(line.split('/')[-1])
     return parents
 
 
