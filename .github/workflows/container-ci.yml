@@ -104,7 +104,6 @@ jobs:
 
       - name: DockerHub_Login
         id: dockerHubLogin
-        if: steps.testImage.outputs.is_test == 'False'
         uses: actions-hub/docker/login@master
         env:
           DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
