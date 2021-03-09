@@ -53,4 +53,4 @@ def test_get_unittest_file_paths():
 @pytest.mark.test_find_and_run_tests
 def test_find_and_run_tests():
     test_out = ci_image.find_and_run_tests(os.environ['DOCKERHUB_ORG'], ['tests/Test_Dockerfile'])
-    assert test_out == False
+    assert test_out == True
