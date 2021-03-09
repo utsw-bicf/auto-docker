@@ -172,12 +172,16 @@ def build_entry(image_name, image_version, parent_images, child_images):
         if image_version in ORIDATA['images'][image_name]:
             for parent in ORIDATA['images'][image_name][image_version]['parents']:
                 if not parent in parent_images:
-                    parent_images.append([parent])
+                    parent_images.append(parent)
             for child in ORIDATA['images'][image_name][image_version]['children']:
                 if not child in child_images:
-                    child_images.append([child])
+                    child_images.append(child)
             if (len(child_images) > 1) and (None in child_images):
                 child_images.remove(None)
+            if (len(child_images) > 1) and ('null' in child_images):
+                child_images.remove('null')
+            if (len(child_images) > 1) and ([] in child_images):
+                child_images.remove([])
             new_image = {
                 'parents': parent_images,
                 'children': child_images
