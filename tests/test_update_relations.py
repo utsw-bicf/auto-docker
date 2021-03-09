@@ -65,7 +65,7 @@ def test_get_children():
 
 @pytest.mark.test_get_parents
 def test_get_parents():
-    update_relations.DOCKERFILE_PATH = 'tests/Test_Dockerfile'
+    update_relations.DOCKERFILE_PATH = 'tests/1.0.0/Test_Dockerfile'
     test_vars.append(update_relations.get_parents())
     assert test_vars[1] == ['ubuntu:18.04']
 
@@ -91,7 +91,6 @@ def test_update_ancestor():
     with open('tests/relations.yaml') as yaml_file:
         update_relations.NEWDATA = yaml.safe_load(yaml_file)
     yaml_file.close()
-    temp_var_ori = update_relations.ORIDATA
     update_relations.update_ancestor("ubuntu:18.04", "base:1.0.1")
     assert 'base:1.0.1' in update_relations.NEWDATA['images']['ubuntu']['18.04']['children']
 
@@ -105,3 +104,11 @@ def test_build_latest():
     update_relations.build_latest('base', '1.0.1')
     assert temp_var_ori != update_relations.NEWDATA
     assert update_relations.NEWDATA['latest']['base'] == "1.0.1"
+
+
+@pytest.mark.test_list_cleaner
+def test_list_cleaner():
+    temp_list = update_relations.list_cleaner(['samtools1.11:1.0.1', ['fastqc0.11.9:1.0.1'], ['rseqc4.0.0:1.0.1'], ['deeptools3.5.0:1.0.1'], [['multiqc1.10:1.0.0']], [['java15:1.0.1'], ['deriva1.4:1.0.1']], [[['null']]]])
+    assert temp_list == ['deeptools3.5.0:1.0.1', 'deriva1.4:1.0.1', 'fastqc0.11.9:1.0.1', 'java15:1.0.1', 'multiqc1.10:1.0.0', 'rseqc4.0.0:1.0.1', 'samtools1.11:1.0.1']
+    temp_list = update_relations.list_cleaner([[[['null']]]])
+    assert temp_list == ['null']

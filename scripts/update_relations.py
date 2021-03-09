@@ -172,12 +172,16 @@ def build_entry(image_name, image_version, parent_images, child_images):
         if image_version in ORIDATA['images'][image_name]:
             for parent in ORIDATA['images'][image_name][image_version]['parents']:
                 if not parent in parent_images:
-                    parent_images.append([parent])
+                    parent_images.append(parent)
             for child in ORIDATA['images'][image_name][image_version]['children']:
                 if not child in child_images:
-                    child_images.append([child])
+                    child_images.append(child)
             if (len(child_images) > 1) and (None in child_images):
                 child_images.remove(None)
+            if (len(child_images) > 1) and ('null' in child_images):
+                child_images.remove('null')
+            if (len(child_images) > 1) and ([] in child_images):
+                child_images.remove([])
             new_image = {
                 'parents': parent_images,
                 'children': child_images
@@ -257,6 +261,29 @@ def build_latest(image_name, image_version):
     NEWDATA['latest'].update(new_latest)
 
 
+def list_cleaner(relations_list):
+    """
+    Takes either a parent or child list and flattens it out, then ensures that no null equivalent values remain
+    :param relations_list: List of either parent or child images
+    """
+    new_relations = []
+    for item in relations_list:
+        if type(item) == list:
+            new_relations.extend(list_cleaner(item))
+        else:
+            new_relations.append(item)
+    if len(new_relations) > 1:
+        if 'null' in new_relations:
+            new_relations.remove('null')
+        if None in new_relations:
+            new_relations.remove(None)
+        if [] in new_relations:
+            new_relations.remove([])
+        new_relations.sort()
+    new_relations = list(dict.fromkeys(new_relations))
+    return new_relations
+
+
 def main():
     """
     Main method
@@ -281,10 +308,22 @@ def main():
         build_entry(image_name, image_version, parents, children)
         build_latest(image_name, image_version)
     # Update all parent images
-    for parent in parents:
-        update_ancestor(parent, docker_image)
+        for parent in parents:
+            update_ancestor(parent, docker_image)
+    # Clean up all parent and child images
+        for image_name in NEWDATA['images']:
+            for image_version in NEWDATA['images'][image_name]:
+                child_images = list_cleaner(
+                    NEWDATA['images'][image_name][image_version]['children'])
+                parent_images = list_cleaner(
+                    NEWDATA['images'][image_name][image_version]['parents'])
+                new_image = {
+                    'children': child_images,
+                    'parents': parent_images
+                }
+                NEWDATA['images'][image_name][image_version].update(new_image)
     # Write out the new relations.yaml
-    write_yaml()
+        write_yaml()
 
 
 if __name__ == "__main__":
