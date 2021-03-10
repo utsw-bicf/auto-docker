@@ -153,8 +153,11 @@ def find_and_run_tests(owner, changed_paths):
                 had_errors = True
         else:
             print("Skipping {}".format(unittest_path))
-    print("Tested {} images. Images with errors: {}".format(
-        tested_images, images_with_errors))
+    if tested_images == 0:
+        print("ERROR: No images tested, unit test may not have been found correctly.")
+        had_errors = True
+    else:
+        print("Tested {} images. Images with errors: {}".format(tested_images, images_with_errors))
     return had_errors
 
 

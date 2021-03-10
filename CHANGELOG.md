@@ -1,5 +1,17 @@
 <hr>
 
+# v1.1.2
+**User Facing**
+* Added template-relations.yaml for better setup instructions
+* Fixed skipping over image testing after build
+* Fixed print of relationships.yaml to not print multiple hierchies, flattenting file representation
+
+**Background**
+* Fixed issue where it would be pushing nested arrays to parent and child images.
+* Cleaned up testing paths and the tests directory.
+
+<hr>
+
 # v1.1.1
 **User Facing**
 * Fixed CI to expect list of changed files instead of string of a single file

@@ -241,8 +241,11 @@ def print_changed(compare_range):
     """
     print("Changed files between {}:".format(compare_range))
     changed_paths = changed_paths_in_range(get_compare_range())
-    for changed_path in changed_paths:
-        print(changed_path)
+    if changed_paths != "No changed paths found.":
+        for changed_path in changed_paths:
+            print(changed_path)
+    else:
+        print(changed_paths)
 
 
 def check_org():
