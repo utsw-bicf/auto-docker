@@ -1,6 +1,6 @@
 <hr>
 
-# v1.1.1
+# v1.1.2
 **User Facing**
 * Added template-relations.yaml for better setup instructions
 * Fixed skipping over image testing after build
