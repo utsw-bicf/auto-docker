@@ -12,6 +12,7 @@ import subprocess
 import yaml
 import re
 import difflib
+import functions
 
 UNITTEST_FILENAME = "unittest.yml"
 TEST_WORKDIR = "/data"
@@ -157,7 +158,8 @@ def find_and_run_tests(owner, changed_paths):
         print("ERROR: No images tested, unit test may not have been found correctly.")
         had_errors = True
     else:
-        print("Tested {} images. Images with errors: {}".format(tested_images, images_with_errors))
+        print("Tested {} images. Images with errors: {}".format(
+            tested_images, images_with_errors))
     return had_errors
 
 
@@ -167,6 +169,7 @@ def main():
             "Usage python3 tests/ci_image.py <docker_owner> [<unittest_or_dockerfile_path>...]")
         sys.exit(1)
     else:
+        functions.docker_login()
         owner = sys.argv[1]
         changed_paths = sys.argv[2:] if len(sys.argv) > 2 else []
         had_errors = find_and_run_tests(owner, changed_paths)

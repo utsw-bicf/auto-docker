@@ -8,6 +8,7 @@ import sys
 import re
 import subprocess
 import yaml
+import functions
 
 
 def load_yaml(master_yaml):
@@ -41,6 +42,7 @@ def main():
             "Usage python3 scripts/ci_latest_images.py <docker_owner> <relations.yaml path>")
         sys.exit(1)
     else:
+        functions.docker_login()
         owner = sys.argv[1]
         relations = load_yaml(os.path.abspath(sys.argv[2]))
         latest_images = relations['latest']

@@ -319,18 +319,27 @@ def pytest_cleanup(dockerfile_path):
         print("ERROR: Unable to untag the Dockerfile or remove the temporary image directory for {}".format(tool))
 
 
+def docker_login():
+    login_command = "echo {} |  docker login --password-stdin -u {} {}".format(os.environ.get(
+        'DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_ORG')).split(" ")
+    login_command = subprocess.Popen(login_command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+    login_code = login_command.wait()
+    if login_code != 0:
+        print("Error logging in to container reposity specified.")
+        exit(1)
+
 
 def main():
     """
     Main method, takes the command to be run
     :param command: the command to be run
     """
-    arglen=len(sys.argv)
+    arglen = len(sys.argv)
     if arglen < 1:
         print("Usage python3 scripts/functions.py <command> <list of required variables for the command>")
         sys.exit(1)
     else:
-        command=sys.argv[1]
+        command = sys.argv[1]
         if command == 'fetch_develop':
             fetch_develop()
         elif command == 'build_docker_cmd':
