@@ -169,8 +169,10 @@ def main():
             "Usage python3 tests/ci_image.py <docker_owner> [<unittest_or_dockerfile_path>...]")
         sys.exit(1)
     else:
-        functions.docker_login()
         owner = sys.argv[1]
+        if not str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
+            owner = "{}/{}".format(os.environ.get('DOCKERHUB_URL'), owner)
+        functions.docker_login()
         changed_paths = sys.argv[2:] if len(sys.argv) > 2 else []
         had_errors = find_and_run_tests(owner, changed_paths)
         if had_errors:

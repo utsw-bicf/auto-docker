@@ -27,7 +27,7 @@ def get_current_branch_name():
     return subprocess.Popen(get_branch_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).communicate()[0]
 
 
-def fetch_develop():
+def fetch_deploy_branch():
     """
     Keep track of which branch we are on, and since we are on a detached head, and we need to be able to go back to it.
     """
@@ -127,6 +127,9 @@ def build_docker_cmd(command, owner, tool, version):
     """
     # Ensure the command is lower-case
     command = command.lower()
+    # Check to see if URL is needed
+    if not str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
+        owner = "{}/{}".format(os.environ.get('DOCKERHUB_URL'), owner)
     # Generate local build command
     if (command == "build"):
         cmd = "docker build -q -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}/\"".format(
@@ -157,6 +160,7 @@ def ensure_local_image(owner, tool, version):
     :param tool: The Docker image to be built
     :param version: The specific version of the Docker image specified by the 'tools' variable
     """
+    docker_login()
     image_cmd = build_docker_cmd("images", owner, tool, version).split()
     image_run = subprocess.Popen(
         image_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -211,6 +215,7 @@ def push_images(owner, changed_paths):
     """
     dockerfile_path = check_dockerfile_count(changed_paths)
     tool, version, filename = dockerfile_path.split('/')
+    docker_login()
     # Verify that this is not a test image
     if not 'test_' in tool:
         # Ensure the image exists locally before trying to push
@@ -320,9 +325,18 @@ def pytest_cleanup(dockerfile_path):
 
 
 def docker_login():
-    login_command = "echo {} |  docker login --password-stdin -u {} {}".format(os.environ.get(
-        'DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_ORG')).split(" ")
-    login_command = subprocess.Popen(login_command, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL)
+    if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
+        print("DockerHub repository found, logging in. {}".format(
+            os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
+        login_command = "docker login -p {} -u {}".format(os.environ.get(
+            'DOCKER_PASSWORD'), os.environ.get('DOCKER_USERNAME')).split(" ")
+    else:
+        print("Non-DockerHub repository found, adding URL and logging in.",
+              file=sys.stderr)
+        login_command = "docker login {} -p {} -u {}".format(os.environ.get(
+            'DOCKERHUB_URL'), os.environ.get('DOCKER_PASSWORD'), os.environ.get('DOCKER_USERNAME')).split(" ")
+    login_command = subprocess.Popen(
+        login_command, stderr=open(os.devnull, "w+"))
     login_code = login_command.wait()
     if login_code != 0:
         print("Error logging in to container reposity specified.")
@@ -340,8 +354,8 @@ def main():
         sys.exit(1)
     else:
         command = sys.argv[1]
-        if command == 'fetch_develop':
-            fetch_develop()
+        if command == 'fetch_deploy_branch':
+            fetch_deploy_branch()
         elif command == 'build_docker_cmd':
             print(build_docker_cmd(sys.argv[2], sys.argv[3],
                                    sys.argv[5], sys.argv[4]))
@@ -361,9 +375,11 @@ def main():
                 changed_paths_in_range(get_compare_range())))
         elif command == 'check_test':
             print(check_test_image(sys.argv[2]))
+        elif command == 'login':
+            docker_login()
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
-                python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
+                python scripts/functions.py \'fetch_deploy_branch\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
                 python scripts/functions.py \'build_docker_cmd\',\'Docker command (ie build, pull, push)\', \'Dockerhub repository\', \'Base directory for tool\', \
                     \'Version subdirectory for tool\' - Returns a valid Docker command that you have specified on the tool requested
                 python scripts/functions.py \'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\' \
