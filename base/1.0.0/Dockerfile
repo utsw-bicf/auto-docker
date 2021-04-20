@@ -8,10 +8,11 @@ RUN apt-get update -y --fix-missing && \
   apt-get dist-upgrade -y && \
   apt-get autoremove -y && \
   apt-get update -y --fix-missing && \
-  apt-get upgrade -y; \
-  locale; \
-  apt-get install -y gcc g++ apt-utils wget gzip pigz pbzip2 zip software-properties-common make parallel pandoc git; \
-  while parallel --citation; do echo "will cite"; done
+  apt-get upgrade -y
+RUN locale
+RUN apt-get install -y gcc g++ apt-utils wget gzip pigz pbzip2 zip software-properties-common make parallel pandoc git
+
+RUN while parallel --citation; do echo "will cite"; done
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
