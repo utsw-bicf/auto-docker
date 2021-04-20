@@ -155,3 +155,10 @@ def test_pytest_cleanup(capfd):
     test_out, test_err = capfd.readouterr()
     assert test_out == "Successfully untagged and removed the image {}:{}\nSuccessfully removed both the temporary testing image directory {}\n".format(
         tool_name, tool_version, tool_name)
+
+
+@pytest.mark.test_dockerhub_login
+def test_dockerhub_login(capfd):
+    functions.docker_login()
+    test_out, test_err = capfd.readouterr()
+    assert test_out == "Login Succeeded\n"
