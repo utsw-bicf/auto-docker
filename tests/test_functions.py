@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 
-import functions
 import sys
 import os
 import pytest
 from io import StringIO
 sys.path.append(os.path.abspath('scripts/'))
+import functions
 
 test_output_path = os.path.dirname(os.path.abspath(__file__)) + '/../'
 no_image = True
