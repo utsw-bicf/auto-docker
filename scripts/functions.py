@@ -329,12 +329,12 @@ def docker_login():
         print("DockerHub repository found, logging in. {}".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
         login_command = "docker login -p {} -u {}".format(os.environ.get(
-            'DOCKER_PASSWORD'), os.environ.get('DOCKER_USERNAME')).split(" ")
+            'DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN')).split(" ")
     else:
         print("Non-DockerHub repository found, adding URL and logging in.",
               file=sys.stderr)
         login_command = "docker login {} -p {} -u {}".format(os.environ.get(
-            'DOCKERHUB_URL'), os.environ.get('DOCKER_PASSWORD'), os.environ.get('DOCKER_USERNAME')).split(" ")
+            'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN')).split(" ")
     login_command = subprocess.Popen(
         login_command, stderr=open(os.devnull, "w+"))
     login_code = login_command.wait()

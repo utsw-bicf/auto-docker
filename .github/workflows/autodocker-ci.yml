@@ -17,8 +17,8 @@ jobs:
         env:
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
-          DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
-          DOCKER_USERNAME: ${{secrets.DOCEKRHUB_UN}}
+          DOCKERHUB_PW: ${{secrets.DOCKERHUB_PW}}
+          DOCKERHUB_UN: ${{secrets.DOCEKRHUB_UN}}
           DOCKERHUB_URL: ${{secrets.DOCKERHUB_URL}}
           LANG: C.UTF-8
           LC_ALL: C.UTF-8
@@ -60,8 +60,8 @@ jobs:
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
-          DOCKER_USERNAME: ${{secrets.DOCEKRHUB_UN}}
+          DOCKERHUB_PW: ${{secrets.DOCKERHUB_PW}}
+          DOCKERHUB_UN: ${{secrets.DOCEKRHUB_UN}}
           DOCKERHUB_URL: ${{secrets.DOCKERHUB_URL}}
           LANG: C.UTF-8
           LC_ALL: C.UTF-8
@@ -83,8 +83,8 @@ jobs:
           DEPLOY_BRANCH: ${{secrets.DEPLOY_BRANCH}}
           DOCKERHUB_ORG: ${{secrets.DOCKERHUB_ORG}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
-          DOCKER_USERNAME: ${{secrets.DOCEKRHUB_UN}}
+          DOCKERHUB_PW: ${{secrets.DOCKERHUB_PW}}
+          DOCKERHUB_UN: ${{secrets.DOCEKRHUB_UN}}
           DOCKERHUB_URL: ${{secrets.DOCKERHUB_URL}}
           LANG: C.UTF-8
           LC_ALL: C.UTF-8

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 
+import functions
 import sys
 import os
 import pytest
 from io import StringIO
 sys.path.append(os.path.abspath('scripts/'))
-import functions
 
 test_output_path = os.path.dirname(os.path.abspath(__file__)) + '/../'
 no_image = True
@@ -147,6 +147,13 @@ def test_check_test_image():
     assert temp_var == True
 
 
+@pytest.mark.test_dockerhub_login
+def test_dockerhub_login(capfd):
+    functions.docker_login()
+    test_out, test_err = capfd.readouterr()
+    assert test_out == "Login Succeeded\n"
+
+
 @pytest.mark.test_pytest_cleanup
 def test_pytest_cleanup(capfd):
     tool_name = test_vars[4].split('/')[0]
@@ -155,10 +162,3 @@ def test_pytest_cleanup(capfd):
     test_out, test_err = capfd.readouterr()
     assert test_out == "Successfully untagged and removed the image {}:{}\nSuccessfully removed both the temporary testing image directory {}\n".format(
         tool_name, tool_version, tool_name)
-
-
-@pytest.mark.test_dockerhub_login
-def test_dockerhub_login(capfd):
-    functions.docker_login()
-    test_out, test_err = capfd.readouterr()
-    assert test_out == "Login Succeeded\n"
