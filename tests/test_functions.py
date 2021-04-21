@@ -147,6 +147,13 @@ def test_check_test_image():
     assert temp_var == True
 
 
+@pytest.mark.test_dockerhub_login
+def test_dockerhub_login(capfd):
+    functions.docker_login()
+    test_out, test_err = capfd.readouterr()
+    assert test_out == "Login Succeeded\n"
+
+
 @pytest.mark.test_pytest_cleanup
 def test_pytest_cleanup(capfd):
     tool_name = test_vars[4].split('/')[0]
