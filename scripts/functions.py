@@ -326,18 +326,17 @@ def pytest_cleanup(dockerfile_path):
 
 def docker_login():
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
-        print("DockerHub repository found, logging in. {}".format(
+        print("DockerHub repository found, logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
         login_command = "docker login -p {} -u {}".format(os.environ.get(
             'DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN')).split(" ")
     else:
-        print("Non-DockerHub repository found, adding URL and logging in.",
-              file=sys.stderr)
-        login_command = "docker login {} -p {} -u {}".format(os.environ.get(
+        print("Non-DockerHub repository found, adding URL {} and logging in.".format(os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
+        login_command="docker login {} -p {} -u {}".format(os.environ.get(
             'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN')).split(" ")
-    login_command = subprocess.Popen(
-        login_command, stderr=open(os.devnull, "w+"))
-    login_code = login_command.wait()
+    login_command=subprocess.Popen(
+        login_command)
+    login_code=login_command.wait()
     if login_code != 0:
         print("Error logging in to container reposity specified.")
         exit(1)
@@ -348,12 +347,12 @@ def main():
     Main method, takes the command to be run
     :param command: the command to be run
     """
-    arglen = len(sys.argv)
+    arglen=len(sys.argv)
     if arglen < 1:
         print("Usage python3 scripts/functions.py <command> <list of required variables for the command>")
         sys.exit(1)
     else:
-        command = sys.argv[1]
+        command=sys.argv[1]
         if command == 'fetch_deploy_branch':
             fetch_deploy_branch()
         elif command == 'build_docker_cmd':
