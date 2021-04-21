@@ -333,7 +333,7 @@ def docker_login():
         login_command="docker login {} -p {} -u {}".format(os.environ.get(
             'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_PW'), os.environ.get('DOCKERHUB_UN')).split(" ")
     login_command=subprocess.Popen(
-        login_command)
+        login_command, stderr=open(os.devnull, "w+"))
     login_code=login_command.wait()
     if login_code != 0:
         print("Error logging in to container reposity specified.")
