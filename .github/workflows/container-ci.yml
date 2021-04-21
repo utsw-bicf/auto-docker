@@ -70,6 +70,15 @@ jobs:
           python3 scripts/ci_image.py "${DOCKERHUB_ORG}" "${docker_file}"
           echo "::set-output name=is_test::$(python3 scripts/functions.py 'check_test' ${docker_file})"
 
+      - name: Docker Login
+        id: docker_login
+        env:
+          DOCKER_PASSWORD: ${{secrets.DOCKERHUB_PW}}
+          DOCKER_USERNAME: ${{secrets.DOCKERHUB_UN}}
+          DOCKERHUB_URL: ${{secrets.DOCKERHUB_URL}}
+        run: |
+          python3 scripts scripts/functions.py 'login'
+
       - name: Update relations.yaml
         id: updateYaml
         if: steps.testImage.outputs.is_test == 'False'

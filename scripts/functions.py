@@ -160,7 +160,6 @@ def ensure_local_image(owner, tool, version):
     :param tool: The Docker image to be built
     :param version: The specific version of the Docker image specified by the 'tools' variable
     """
-    docker_login()
     image_cmd = build_docker_cmd("images", owner, tool, version).split()
     image_run = subprocess.Popen(
         image_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -215,7 +214,6 @@ def push_images(owner, changed_paths):
     """
     dockerfile_path = check_dockerfile_count(changed_paths)
     tool, version, filename = dockerfile_path.split('/')
-    docker_login()
     # Verify that this is not a test image
     if not 'test_' in tool:
         # Ensure the image exists locally before trying to push
