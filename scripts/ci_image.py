@@ -66,6 +66,8 @@ def run_docker_get_output(imagename, cmd, workdir=None, user=None):
     if user:
         options += "--user {} ".format(user)
     options += "-i --rm "
+    if not str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
+        imagename = "{}/{}".format(os.environ.get('DOCKERHUB_URL'), imagename)
     print("Testing image {} with: docker run {} {} {}".format(
         imagename, options, imagename, cmd))
     docker_cmd = "docker run {} {} {}".format(options, imagename, cmd)
@@ -170,8 +172,6 @@ def main():
         sys.exit(1)
     else:
         owner = sys.argv[1]
-        if not str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
-            owner = "{}/{}".format(os.environ.get('DOCKERHUB_URL'), owner)
         functions.docker_login()
         changed_paths = sys.argv[2:] if len(sys.argv) > 2 else []
         had_errors = find_and_run_tests(owner, changed_paths)
