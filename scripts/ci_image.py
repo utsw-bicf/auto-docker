@@ -12,6 +12,7 @@ import subprocess
 import yaml
 import re
 import difflib
+import functions
 
 UNITTEST_FILENAME = "unittest.yml"
 TEST_WORKDIR = "/data"
@@ -50,10 +51,10 @@ def get_test_list(filename):
         return testinfo_list
 
 
-def run_docker_get_output(imagename, cmd, workdir=None, user=None):
+def run_docker_get_output(image_name, cmd, workdir=None, user=None):
     """
     Launch docker process with run command passing the cmd.
-    :param imagename: str: name of the image to run
+    :param image_name: str: name of the image to run
     :param cmd: str: commmand to run inside the image
     :param workdir: str: optional flag to run in a particular directory
     :param user: str: optional flag to run as a particular user
@@ -66,27 +67,27 @@ def run_docker_get_output(imagename, cmd, workdir=None, user=None):
         options += "--user {} ".format(user)
     options += "-i --rm "
     print("Testing image {} with: docker run {} {} {}".format(
-        imagename, options, imagename, cmd))
-    docker_cmd = "docker run {} {} {}".format(options, imagename, cmd)
+        image_name, options, image_name, cmd))
+    docker_cmd = "docker run {} {} {}".format(options, image_name, cmd)
     return run_bash_cmd(docker_cmd, ignore_non_zero_exit_status=True)
 
 
-def run_tests(imagename, unittest_filepath):
+def run_tests(image_name, unittest_filepath):
     """
-    Run all tests contained in a unittest_filename against imagename
-    :param imagename: str: name of the image to test
+    Run all tests contained in a unittest_filename against image_name
+    :param image_name: str: name of the image to test
     :param unittest_filepath: str path to unittest.yml file
     :return: bool: true if we had an error
     """
     had_error = False
     for cmd, expect_text in get_test_list(unittest_filepath):
         expect_pattern = re.compile(expect_text, re.DOTALL)
-        docker_output = run_docker_get_output(imagename, cmd)
+        docker_output = run_docker_get_output(image_name, cmd)
         if not re.match(expect_pattern, docker_output):
             print_test_error(cmd, expect_text, docker_output)
             had_error = True
         docker_output_with_options = run_docker_get_output(
-            imagename, cmd, workdir=TEST_WORKDIR)
+            image_name, cmd, workdir=TEST_WORKDIR)
         if not re.match(expect_pattern, docker_output_with_options):
             print_test_error(cmd + " (with workdir and user options)",
                              expect_text, docker_output_with_options)
@@ -134,7 +135,7 @@ def get_unittest_file_paths(path_list):
 def find_and_run_tests(owner, changed_paths):
     """
     Find an run tests based on a docker ownername (used to build image name) and a list of paths
-    :param owner: str: prefix of docker imagename
+    :param owner: str: prefix of docker image_name
     :param changed_paths: [str]: list of paths that were changed and may need to be tested
     :return: bool: true when we had errors
     """
@@ -145,8 +146,11 @@ def find_and_run_tests(owner, changed_paths):
         parts = unittest_path.split(sep="/")
         if len(parts):
             tool, tag, _ = parts
-            imagename = "{}/{}:{}".format(owner, tool, tag).replace("+", "_")
-            had_error = run_tests(imagename, unittest_path)
+            image_name = "{}/{}:{}".format(owner, tool, tag).replace("+", "_")
+            if not (str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None or os.environ.get('DOCKERHUB_URL') == ''):
+                image_name = "{}/{}".format(
+                    os.environ.get('DOCKERHUB_URL'), image_name)
+            had_error = run_tests(image_name, unittest_path)
             tested_images += 1
             if had_error:
                 images_with_errors += 1
@@ -157,7 +161,8 @@ def find_and_run_tests(owner, changed_paths):
         print("ERROR: No images tested, unit test may not have been found correctly.")
         had_errors = True
     else:
-        print("Tested {} images. Images with errors: {}".format(tested_images, images_with_errors))
+        print("Tested {} images. Images with errors: {}".format(
+            tested_images, images_with_errors))
     return had_errors
 
 

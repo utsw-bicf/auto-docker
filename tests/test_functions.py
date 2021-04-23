@@ -69,14 +69,21 @@ def test_print_changed(capfd):
 @pytest.mark.test_build_docker_cmd
 def build_docker_cmd(capfd):
     test_output = []
-    for command in ['build', 'images', 'pull', 'push', 'tag']:
+    for command in ['build', 'images', 'pull', 'push']:
         functions.build_docker_cmd(
-            command, test_vars[0], 'base', '1.0.1', '1.0.0')
+            command, test_vars[0], 'base', '1.0.1')
         test_out, test_err = capfd.readouterr()
         test_output.append(test_out)
         print(test_err)
     assert test_output == ['docker build -f "base/1.0.1/Dockerfile" -t "testing_base/base:1.0.1" "base/1.0.1/"', 'docker images testing_base/base:1.0.1 -q',
-                           'docker pull testing_base/base:1.0.1', 'docker push testing_base/base:1.0.1', 'docker tag testing_base/base:1.0.0 testing_base/base:1.0.1']
+                           'docker pull testing_base/base:1.0.1', 'docker push testing_base/base:1.0.1']
+
+
+@pytest.mark.test_dockerhub_login
+def test_dockerhub_login(capfd):
+    functions.docker_login()
+    test_out, test_err = capfd.readouterr()
+    assert test_out == "Login Succeeded\n"
 
 
 @pytest.mark.test_ensure_local_image
