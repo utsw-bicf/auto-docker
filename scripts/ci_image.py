@@ -147,8 +147,9 @@ def find_and_run_tests(owner, changed_paths):
         if len(parts):
             tool, tag, _ = parts
             image_name = "{}/{}:{}".format(owner, tool, tag).replace("+", "_")
-            if not str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
-                image_name = "{}/{}".format(os.environ.get('DOCKERHUB_URL'), image_name)
+            if not (str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None or os.environ.get('DOCKERHUB_URL') == ''):
+                image_name = "{}/{}".format(
+                    os.environ.get('DOCKERHUB_URL'), image_name)
             had_error = run_tests(image_name, unittest_path)
             tested_images += 1
             if had_error:

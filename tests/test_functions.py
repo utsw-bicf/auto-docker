@@ -76,7 +76,14 @@ def build_docker_cmd(capfd):
         test_output.append(test_out)
         print(test_err)
     assert test_output == ['docker build -f "base/1.0.1/Dockerfile" -t "testing_base/base:1.0.1" "base/1.0.1/"', 'docker images testing_base/base:1.0.1 -q',
-                           'docker pull testing_base/base:1.0.1', 'docker push testing_base/base:1.0.1', 'docker tag testing_base/base:1.0.0 testing_base/base:1.0.1']
+                           'docker pull testing_base/base:1.0.1', 'docker push testing_base/base:1.0.1']
+
+
+@pytest.mark.test_dockerhub_login
+def test_dockerhub_login(capfd):
+    functions.docker_login()
+    test_out, test_err = capfd.readouterr()
+    assert test_out == "Login Succeeded\n"
 
 
 @pytest.mark.test_ensure_local_image
@@ -145,13 +152,6 @@ def test_check_test_image():
     assert temp_var == False
     temp_var = functions.check_test_image(test_vars[5])
     assert temp_var == True
-
-
-@pytest.mark.test_dockerhub_login
-def test_dockerhub_login(capfd):
-    functions.docker_login()
-    test_out, test_err = capfd.readouterr()
-    assert test_out == "Login Succeeded\n"
 
 
 @pytest.mark.test_pytest_cleanup
