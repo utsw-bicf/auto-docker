@@ -325,12 +325,12 @@ def pytest_cleanup(dockerfile_path):
 
 def docker_login():
     word_file = tempfile.NamedTemporaryFile()
-    with open (word_file.name(), 'w') as f:
+    with open (word_file.name, 'w') as f:
         f.write(os.environ.get('DOCKERHUB_PW'))
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
         print("DockerHub repository found, logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
-        login_command = "cat {} | docker login -u {} --password-stdin".format(word_file.name(), os.environ.get('DOCKERHUB_UN')).split(" ")
+        login_command = "cat {} | docker login -u {} --password-stdin".format(word_file.name, os.environ.get('DOCKERHUB_UN')).split(" ")
     else:
         print("Non-DockerHub repository found, adding URL {} and logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
