@@ -341,7 +341,7 @@ def docker_login():
         login_command = "docker login {} -u {} --password-stdin".format(word_file.name, os.environ.get(
             'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_UN')).split(" ")
     login_command = subprocess.Popen(
-        login_command, stderr=open(os.devnull, "w+"), stdin=cat_command.stdout)
+        login_command, stdin=cat_command.stdout)
     login_code = login_command.wait()
     word_file.close()
     if login_code != 0:
