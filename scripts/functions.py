@@ -327,18 +327,20 @@ def docker_login():
     word_file = tempfile.NamedTemporaryFile()
     with open (word_file.name, 'w') as f:
         f.write(os.environ.get('DOCKERHUB_PW'))
-    print(word_file.name)
+    cat_command = "cat {}".format(word_file.name).split(" ")
+    cat_command = subprocess.Popen(cat_command, stdout=PIPE)
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
         print("DockerHub repository found, logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
-        login_command = "cat {} | docker login -u {} --password-stdin".format(word_file.name, os.environ.get('DOCKERHUB_UN')).split(" ")
+        login_command = "docker login -u {} --password-stdin".format(word_file.name, os.environ.get('DOCKERHUB_UN')).split(" ")
+        print(login_command)
     else:
         print("Non-DockerHub repository found, adding URL {} and logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
-        login_command = "cat " + str(word_file.name()) + " | docker login {} -u {} --password-stdin".format(os.environ.get(
+        login_command = "docker login {} -u {} --password-stdin".format(word_file.name, os.environ.get(
             'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_UN')).split(" ")
     login_command = subprocess.Popen(
-        login_command, stderr=open(os.devnull, "w+"))
+        login_command, stderr=open(os.devnull, "w+", stdin=cat_command.stdout))
     login_code = login_command.wait()
     word_file.close()
     if login_code != 0:
