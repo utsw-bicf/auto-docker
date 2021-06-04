@@ -328,20 +328,19 @@ def docker_login():
     with open(word_file.name, 'w') as f:
         f.write(os.environ.get('DOCKERHUB_PW'))
     cat_command = "cat {}".format(word_file.name).split(" ")
-    cat_command_run = subprocess.Popen(cat_command, stdout=subprocess.PIPE)
+    cat_command_run = subprocess.Popen(cat_command, stdout=subprocess.PIPE, text=True)
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
         print("DockerHub repository found, logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
         login_command = "docker login -u {} --password-stdin".format(
             word_file.name, os.environ.get('DOCKERHUB_UN')).split(" ")
-        print(login_command)
     else:
         print("Non-DockerHub repository found, adding URL {} and logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
         login_command = "docker login {} -u {} --password-stdin".format(word_file.name, os.environ.get(
             'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_UN')).split(" ")
     login_command_run = subprocess.Popen(
-        login_command, stdin=cat_command_run.stdout)
+        login_command, stdin=cat_command_run.communicate()[0])
     login_code = login_command_run.wait()
     word_file.close()
     if login_code != 0:
