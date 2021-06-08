@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import base64
+import json
 import os
 import re
 import sys
@@ -324,25 +326,26 @@ def pytest_cleanup(dockerfile_path):
 
 
 def docker_login():
-    word_file = tempfile.NamedTemporaryFile()
-    with open(word_file.name, 'w') as f:
-        f.write(os.environ.get('DOCKERHUB_PW'))
-    cat_command = "cat {}".format(word_file.name).split(" ")
-    cat_command_run = subprocess.Popen(cat_command, stdout=subprocess.PIPE, text=True)
+    #Generate the base64 authorization key
+    auth_key = base64.b64encode("{}:{}".format(os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_PW')))
+    #Format the eventual json object
+    docker_login_file = {"auths": {"https://index.docker.io/v1/": {"auth": "{}".format(auth_key)}}}
+    #Verify that the directory "~/.docker" exists, or create it if it does not
+    if not os.path.isdir("~/.docker"):
+        os.makedirs("~/.docker")
+    with open ("~/.docker/config.json", 'w') as json_file:
+        json.dump(docker_login_file, json_file)
+    json_file.close()
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
         print("DockerHub repository found, logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
-        login_command = "docker login -u {} --password-stdin".format(
-            word_file.name, os.environ.get('DOCKERHUB_UN')).split(" ")
+        login_command = "docker login".split(" ")
     else:
         print("Non-DockerHub repository found, adding URL {} and logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
-        login_command = "docker login {} -u {} --password-stdin".format(word_file.name, os.environ.get(
-            'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_UN')).split(" ")
-    login_command_run = subprocess.Popen(
-        login_command, stdin=cat_command_run.communicate()[0])
+        login_command = "docker login {} ".format(os.environ.get('DOCKERHUB_URL')).split(" ")
+    login_command_run = subprocess.Popen(login_command)
     login_code = login_command_run.wait()
-    word_file.close()
     if login_code != 0:
         print("Error logging in to container reposity specified.")
         exit(1)
