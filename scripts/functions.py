@@ -326,14 +326,16 @@ def pytest_cleanup(dockerfile_path):
 
 
 def docker_login():
-    #Generate the base64 authorization key
-    auth_key = base64.b64encode("{}:{}".format(os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_PW')))
-    #Format the eventual json object
-    docker_login_file = {"auths": {"https://index.docker.io/v1/": {"auth": "{}".format(auth_key)}}}
-    #Verify that the directory "~/.docker" exists, or create it if it does not
+    # Generate the base64 authorization key
+    auth_key = base64.b64encode("{}:{}".format(
+        os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_PW')).encode())
+    # Format the eventual json object
+    docker_login_file = {
+        "auths": {"https://index.docker.io/v1/": {"auth": "{}".format(auth_key)}}}
+    # Verify that the directory "~/.docker" exists, or create it if it does not
     if not os.path.isdir("~/.docker"):
         os.makedirs("~/.docker")
-    with open ("~/.docker/config.json", 'w') as json_file:
+    with open("~/.docker/config.json", 'w') as json_file:
         json.dump(docker_login_file, json_file)
     json_file.close()
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
@@ -343,7 +345,8 @@ def docker_login():
     else:
         print("Non-DockerHub repository found, adding URL {} and logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
-        login_command = "docker login {} ".format(os.environ.get('DOCKERHUB_URL')).split(" ")
+        login_command = "docker login {} ".format(
+            os.environ.get('DOCKERHUB_URL')).split(" ")
     login_command_run = subprocess.Popen(login_command)
     login_code = login_command_run.wait()
     if login_code != 0:
