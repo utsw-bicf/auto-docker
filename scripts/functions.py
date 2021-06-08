@@ -329,15 +329,8 @@ def docker_login():
     # Generate the base64 authorization key
     auth_key = base64.b64encode("{}:{}".format(
         os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_PW')).encode())
-    # Format the eventual json object
     docker_login_file = {
-        "auths": {"https://index.docker.io/v1/": {"auth": "{}".format(auth_key)}}}
-    # Verify that the directory "~/.docker" exists, or create it if it does not
-    if not os.path.isdir("~/.docker"):
-        os.makedirs("~/.docker")
-    with open("~/.docker/config.json", 'w') as json_file:
-        json.dump(docker_login_file, json_file)
-    json_file.close()
+        "auths": {"docker.io": {"auth": "{}".format(auth_key)}}}
     if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
         print("DockerHub repository found, logging in.".format(
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
@@ -347,6 +340,16 @@ def docker_login():
             os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
         login_command = "docker login {} ".format(
             os.environ.get('DOCKERHUB_URL')).split(" ")
+        docker_login_file = {"auths": {"{}".format(os.environ.get("DOCKERHUB_URL")): {
+            "auth": "{}".format(auth_key)}}}
+    # Verify that the directory "/home/runner/.docker" exists, or create it if it does not
+    if not os.path.isdir("/home/runner/.docker"):
+        os.makedirs("/home/runner/.docker")
+    elif os.path.isfile("/home/runner/.docker/config.json"):
+        os.remove("/home/runner/.docker/config.json")
+    with open("/home/runner/.docker/config.json", 'w') as json_file:
+        json.dump(docker_login_file, json_file)
+    json_file.close()
     login_command_run = subprocess.Popen(login_command)
     login_code = login_command_run.wait()
     if login_code != 0:

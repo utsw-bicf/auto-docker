@@ -43,6 +43,7 @@ def main():
         sys.exit(1)
     else:
         owner = sys.argv[1]
+        functions.docker_login()
         relations = load_yaml(os.path.abspath(sys.argv[2]))
         latest_images = relations['latest']
         for image in latest_images:
