@@ -6,7 +6,9 @@ Prints out the paths for the unittest.yml files for all latest images to run the
 import os
 import sys
 import re
+import subprocess
 import yaml
+import functions
 
 
 def load_yaml(master_yaml):
@@ -26,7 +28,7 @@ def pull_image(docker_image):
     :param docker_image: str: Docker image to pull in the format '<organization>/<image_name>:<version>'
     """
     if os.system("docker pull " + docker_image) != 0:
-        print("ERROR: Unable to build " + docker_image)
+        print("ERROR: Unable to pull " + docker_image)
         sys.exit(1)
 
 
@@ -41,16 +43,29 @@ def main():
         sys.exit(1)
     else:
         owner = sys.argv[1]
+        functions.docker_login()
         relations = load_yaml(os.path.abspath(sys.argv[2]))
         latest_images = relations['latest']
         for image in latest_images:
             tag = latest_images[image]
             image_name = "{}/{}:{}".format(owner, image, tag).replace("+", "_")
+            if not (str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None or os.environ.get('DOCKERHUB_URL') == ''):
+                image_name = "{}/{}".format(
+                    os.environ.get('DOCKERHUB_URL'), image_name)
             pull_image(image_name)
-            image_path = image + "/" + tag + "/unittest.yml"
-            if os.system("python3 scripts/ci_image.py \"" + owner + "\" " + image_path) != 0:
+            test_path = "{}/{}/unittest.yml".format(image, tag)
+            test_command = "python3 scripts/ci_image.py \"{}\" {}".format(
+                owner, test_path).split(" ")
+            test_command = subprocess.Popen(test_command)
+            test_code = test_command.wait()
+            if test_code != 0:
                 print("ERROR: Image testing failed for " + image_name)
                 sys.exit(1)
+            else:
+                print("Test for {} successful, purging and restarting for next image.".format(
+                    image_name))
+                purge_command = "docker system prune -a -f".split(" ")
+                purge_command = subprocess.Popen(purge_command)
 
 
 if __name__ == "__main__":

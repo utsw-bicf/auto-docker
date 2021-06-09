@@ -20,7 +20,7 @@ The repository is a general purpose template for creating new docker building in
 Feedback
 ========
 
-If you experience any issues with the auto-docker or would like to contribute to its source code, please visit [`bicf-utsw/auto-docker`](https://github.com/utsw-bicf/auto-docker).
+If you experience any issues with the auto-docker or would like to contribute to its source code, please visit [`utsw-bicf/auto-docker`](https://github.com/utsw-bicf/auto-docker).
 
 Please [open an issue](https://git.io/JtyFp) for questions related to auto-docker usage, bug reports, or general inquiries.
 

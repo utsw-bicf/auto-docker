@@ -27,7 +27,8 @@ def test_get_test_list():
 
 @pytest.mark.test_run_tests
 def test_run_tests():
-    test_out = ci_image.run_tests('bicf/base:1.0.0', 'tests/1.0.0/unittest.yml')
+    test_out = ci_image.run_tests(
+        'bicf/base:1.0.0', 'tests/1.0.0/unittest.yml')
     assert test_out == False
 
 
@@ -46,11 +47,13 @@ def test_get_test_file_path():
 
 @pytest.mark.test_get_unittest_file_paths
 def test_get_unittest_file_paths():
-    test_out = ci_image.get_unittest_file_paths(['tests/1.0.0/Test_Dockerfile'])
+    test_out = ci_image.get_unittest_file_paths(
+        ['tests/1.0.0/Test_Dockerfile'])
     assert test_out == {'tests/1.0.0/unittest.yml'}
 
 
 @pytest.mark.test_find_and_run_tests
 def test_find_and_run_tests():
-    test_out = ci_image.find_and_run_tests(os.environ['DOCKERHUB_ORG'], ['tests/1.0.0/Test_Dockerfile'])
+    test_out = ci_image.find_and_run_tests(os.environ['DOCKERHUB_ORG'], [
+                                           'tests/1.0.0/Test_Dockerfile'])
     assert test_out == True
