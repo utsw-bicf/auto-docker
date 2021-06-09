@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+import base64
+import json
 import os
 import re
 import sys
 import subprocess
+import tempfile
 
 
 def get_deploy_branch():
@@ -27,7 +30,7 @@ def get_current_branch_name():
     return subprocess.Popen(get_branch_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).communicate()[0]
 
 
-def fetch_develop():
+def fetch_deploy_branch():
     """
     Keep track of which branch we are on, and since we are on a detached head, and we need to be able to go back to it.
     """
@@ -127,6 +130,9 @@ def build_docker_cmd(command, owner, tool, version):
     """
     # Ensure the command is lower-case
     command = command.lower()
+    # Check to see if URL is needed
+    if not (str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None or os.environ.get('DOCKERHUB_URL') == ''):
+        owner = "{}/{}".format(os.environ.get('DOCKERHUB_URL'), owner)
     # Generate local build command
     if (command == "build"):
         cmd = "docker build -q -f \"{}/{}/Dockerfile\" -t \"{}/{}:{}\" \"{}/{}/\"".format(
@@ -319,20 +325,37 @@ def pytest_cleanup(dockerfile_path):
         print("ERROR: Unable to untag the Dockerfile or remove the temporary image directory for {}".format(tool))
 
 
+def docker_login():
+    if str(os.environ.get('DOCKERHUB_URL')).lower() == "none" or str(os.environ.get('DOCKERHUB_URL')).lower() == 'null' or os.environ.get('DOCKERHUB_URL') == None:
+        print("DockerHub repository found, logging in.".format(
+            os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
+        login_command = "docker login -u {} -p {}".format(os.environ.get(
+            'DOCKERHUB_UN'), os.environ.get('DOCKERHUB_PW')).split(" ")
+    else:
+        print("Non-DockerHub repository found, adding URL {} and logging in.".format(
+            os.environ.get('DOCKERHUB_URL')), file=sys.stderr)
+        login_command = "docker login {} -u {} -p {}".format(os.environ.get(
+            'DOCKERHUB_URL'), os.environ.get('DOCKERHUB_UN'), os.environ.get('DOCKERHUB_PW')).split(" ")
+    login_command_run = subprocess.Popen(login_command)
+    login_code = login_command_run.wait()
+    if login_code != 0:
+        print("Error logging in to container reposity specified.")
+        exit(1)
+
 
 def main():
     """
     Main method, takes the command to be run
     :param command: the command to be run
     """
-    arglen=len(sys.argv)
+    arglen = len(sys.argv)
     if arglen < 1:
         print("Usage python3 scripts/functions.py <command> <list of required variables for the command>")
         sys.exit(1)
     else:
-        command=sys.argv[1]
-        if command == 'fetch_develop':
-            fetch_develop()
+        command = sys.argv[1]
+        if command == 'fetch_deploy_branch':
+            fetch_deploy_branch()
         elif command == 'build_docker_cmd':
             print(build_docker_cmd(sys.argv[2], sys.argv[3],
                                    sys.argv[5], sys.argv[4]))
@@ -352,9 +375,11 @@ def main():
                 changed_paths_in_range(get_compare_range())))
         elif command == 'check_test':
             print(check_test_image(sys.argv[2]))
+        elif command == 'login':
+            docker_login()
         else:
             print("""ERROR: Command \'{}\' not recognized.  Valid commands and their associated requirements:
-                python scripts/functions.py \'fetch_develop\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
+                python scripts/functions.py \'fetch_deploy_branch\' - Runs a \'git fetch\' on the deploy branch ID while also tracking the current branch under development
                 python scripts/functions.py \'build_docker_cmd\',\'Docker command (ie build, pull, push)\', \'Dockerhub repository\', \'Base directory for tool\', \
                     \'Version subdirectory for tool\' - Returns a valid Docker command that you have specified on the tool requested
                 python scripts/functions.py \'esure_local_image\', \'Dockerhub repository\', \'Base directory for tool\', \'Version subdirectory for tool\' \
