@@ -1,4 +1,13 @@
 <hr>
+# v1.2.0
+**User Facing**
+* Added ability to pull and push private images
+
+**Background**
+* Changed login method from using GitHub Actions to using Python
+* Added cleanup step after each image test in CI to ensure that CI VM does not run out of disk space
+
+<hr>
 
 # v1.1.2
 **User Facing**
